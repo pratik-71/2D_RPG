@@ -13,6 +13,7 @@ export default class Preloader extends Phaser.Scene {
     this.load.tilemapTiledJSON('game_environment', 'layers/game_environment.tmj');
 
     this.load.spritesheet('hero', 'tiles/Sword_Run_full.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('hero_attack', 'tiles/Sword_attack_full.png', { frameWidth: 64, frameHeight: 64 });
   }
 
   create() {

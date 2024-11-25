@@ -31,6 +31,7 @@ export default class Game extends Phaser.Scene {
       down: 'S',
       left: 'A',
       right: 'D'
+      
     });
 
   }
