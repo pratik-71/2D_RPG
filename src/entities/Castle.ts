@@ -9,6 +9,7 @@ export default class Castle {
 
   initCastle() {
     const objectLayer = this.map.getObjectLayer('castle_tiles');
+    console.log(objectLayer.objects)
     if (!objectLayer) {
       console.error('Object layer "castle_tiles" not found');
       return;
