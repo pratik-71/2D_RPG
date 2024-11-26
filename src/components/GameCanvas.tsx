@@ -30,7 +30,7 @@ const GameCanvas: React.FC = () => {
     };
   }, []);
 
-  return <div id="phaser-container" style={{ width: '98vw', height: '197vh', overflow: 'hidden' }}></div>;
+  return <div id="phaser-container" style={{ width: '98vw', height: '97vh', overflow: 'hidden' }}></div>;
 };
 
 export default GameCanvas;
