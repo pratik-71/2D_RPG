@@ -1,7 +1,107 @@
-#phaser-container {
-    width: 100%;        
-    height: 100%;      
-    display: block;    
-  }
+/* General body and game container settings */
+body {
+  margin: 0;
+  overflow: hidden; /* Prevent scrollbars */
+}
 
-  
+.game-container {
+  position: relative;
+  height: 100vh;
+}
+
+#phaser-container {
+  width: 100%;
+  height: 91%; /* Game occupies most of the height */
+}
+
+/* Data panel setup */
+.data-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: black;
+  color: white;
+  position: absolute;
+  bottom: 0; 
+  width: 100%;
+  height: 9%; 
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* First Column (Hero Health & Castle Health) */
+.first-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  width: 33%; /* Adjusted width for equal columns */
+}
+
+.health-bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.health-bar h3 {
+  margin: 0 10px 0 0; /* Remove margin and add space between text and bar */
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.health-fill {
+  flex: 1;
+  height: 15px;
+  background-color: rgb(58, 152, 34); /* Green health bar */
+  border-radius: 10px;
+  transition: width 0.3s ease; /* Smooth transition on health change */
+}
+
+/* Second Column (Players and Enemies) */
+.second-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* Center vertically */
+  width: 33%; /* Adjusted width for equal columns */
+}
+
+.second-column h6 {
+  margin: 5px 0; /* Reduce gap by setting smaller margins */
+  font-size: 14px;
+}
+
+/* Third Column (Message Input and Send Button) */
+.third-column {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-items: center;
+  width: 33%; /* Adjusted width for equal columns */
+}
+
+.message-input {
+  width: 80%; /* Adjust width */
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  background-color: #222;
+  color: white;
+}
+
+.send-button {
+  width: 14%;
+  padding: 8px;
+  background-color: rgba(255, 0, 0, 0.8); /* Red with slight transparency */
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.send-button:hover {
+  background-color: rgb(30, 92, 217); /* Full opacity on hover */
+}
