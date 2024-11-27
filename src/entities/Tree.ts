@@ -72,8 +72,9 @@ export default class Tree {
       this.treeGroup.add(tree);
 
       // Hero-tree collider for blocking movement
-      this.scene.physics.add.collider(this.scene.hero.sprite, tree);
-
+      this.scene.physics.add.collider(this.scene.hero.sprite, tree, () => {
+        this.updateDepth(tree);
+      });
       // Overlap between hero and attack sensor for damage handling
       this.scene.physics.add.overlap(
         this.scene.hero.sprite,
@@ -114,7 +115,7 @@ export default class Tree {
     tree.healthBarBackground.fillStyle(0x000000); // Black color for the background bar
     tree.healthBarBackground.fillRect(
       tree.x - barWidth / 2,
-      tree.y - tree.height / 2 - 10, // Position the health bar above the tree
+      tree.y - tree.height / 2 + 22, // Position the health bar above the tree
       barWidth,
       barHeight
     );
@@ -125,7 +126,7 @@ export default class Tree {
     tree.healthBar.fillStyle(0x00ff00); // Green color for the current health
     tree.healthBar.fillRect(
       tree.x - barWidth / 2,
-      tree.y - tree.height / 2 - 10, // Position the health bar above the tree
+      tree.y - tree.height / 2 + 22, // Position the health bar above the tree
       barWidth * healthPercentage,
       barHeight
     );
@@ -141,7 +142,6 @@ export default class Tree {
       );
     }
   }
-
   // Method to show the health bar for 5 seconds after the hero attacks
   showHealthBarForDuration(tree) {
     tree.healthBarBackground.setAlpha(1); // Show the background bar
@@ -153,4 +153,35 @@ export default class Tree {
       tree.healthBar.setAlpha(0);
     });
   }
+
+  updateDepth(tree) {
+    const hero = this.scene.hero.sprite;
+  
+    // Define the tree's top and bottom boundaries
+    const treeBottom = tree.y + tree.height / 2;
+    const treeTop = tree.y - tree.height / 2;
+  
+    // Define the "leaves" area (top portion of the tree)
+    const treeLeavesTop = tree.y - tree.height / 3;  // Adjust this as needed (top 33% of the tree)
+    const treeLeavesBottom = tree.y - tree.height / 2; // Bottom of the leaves
+  
+    // Check if the hero is within the "leaves" area
+    if (hero.y < treeLeavesTop) {
+      // Hero is above the tree, so put the hero in front of the tree (stem)
+      hero.setDepth(tree.y + 1); // Hero in front of the tree
+    } else if (hero.y >= treeLeavesTop && hero.y <= treeLeavesBottom) {
+      // Hero is standing on the tree leaves area
+      hero.setDepth(tree.y + 1); // Hero in front of the tree's leaves (on top)
+      hero.y = treeLeavesBottom - hero.height / 2; // Adjust hero's position to stand on the leaves
+    } else if (hero.y > treeBottom) {
+      // Hero is below the tree (stem area)
+      hero.setDepth(tree.y + 1); // Hero in front of the tree (stem)
+    } else {
+      // Hero is at or near the base of the tree
+      hero.setDepth(tree.y - 1); // Hero behind the tree (stem area)
+    }
+  }
+  
+  
+  
 }

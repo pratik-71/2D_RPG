@@ -14,16 +14,14 @@ export default class Game extends Phaser.Scene {
     
     // Load tilesets
     const dungeon_tileset = map.addTilesetImage('duneon', 'dungeon_tiles');
-    const grass_tiles_tileset = map.addTilesetImage('grass_tiles_1', 'grass_tiles');
+    const grass_tiles_tileset = map.addTilesetImage('grass_tiles', 'grass_tiles');
     const boundry_water_tiles = map.addTilesetImage('boundry_water_tiles','boundry_water_tiles');
     const enemy_spawn_tiles_tileset = map.addTilesetImage('enemy_spawn_tiles', 'enemy_spawn_tiles');
-    const bush_tiles = map.addTilesetImage('grass_tiles_1', 'bush_tiles');
     const ground_up_tiles = map.addTilesetImage('ground_up_tiles', 'ground_up_tiles');
     const road_tiles = map.addTilesetImage('enemy_spawn_tiles', 'road_tiles');
     
     // Create layers
     map.createLayer('grass_tiles', grass_tiles_tileset, 0, 0);
-    map.createLayer('bush_tiles', bush_tiles, 0, 0);
     map.createLayer('enemy_spawn_tiles', enemy_spawn_tiles_tileset, 0, 0);
     map.createLayer('road_tiles', road_tiles, 0, 0);
     map.createLayer('ground_up_tiles', ground_up_tiles, 0, 0);
