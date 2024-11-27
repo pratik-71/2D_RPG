@@ -1,4 +1,6 @@
+// MainMenu.ts (client-side using Phaser)
 import Phaser from 'phaser';
+import io from 'socket.io-client';
 
 export default class MainMenu extends Phaser.Scene {
   constructor() {
@@ -10,11 +12,11 @@ export default class MainMenu extends Phaser.Scene {
   }
 
   create() {
-    // Background image covering the full screen
-    const background = this.add.image(0, 0, 'background')
-      .setOrigin(0, 0); // Set the origin to top-left corner to ensure it starts from (0, 0)
+    // Connect to the Socket.IO server
+    this.socket = io('http://localhost:3000');
 
-    // Set the background image to cover the entire screen by scaling it to the canvas size
+    // Background image covering the full screen
+    const background = this.add.image(0, 0, 'background').setOrigin(0, 0);
     background.setDisplaySize(this.cameras.main.width, this.cameras.main.height);
 
     // Main menu container for positioning
@@ -26,7 +28,7 @@ export default class MainMenu extends Phaser.Scene {
       color: '#fff',
       fontFamily: 'Arial',
       fontStyle: 'bold'
-    }).setOrigin(0.5); // Center title text horizontally
+    }).setOrigin(0.5);
     menuContainer.add(titleText);
 
     // Single Player Button (centered)
@@ -35,18 +37,17 @@ export default class MainMenu extends Phaser.Scene {
       color: '#00ff00',
       fontFamily: 'Arial',
       fontStyle: 'bold'
-    })
-      .setInteractive()
+    }).setInteractive()
       .on('pointerover', () => {
-        singlePlayerButton.setStyle({ color: '#ffcc00' }); // Hover effect
+        singlePlayerButton.setStyle({ color: '#ffcc00' });  // Hover effect
       })
       .on('pointerout', () => {
-        singlePlayerButton.setStyle({ color: '#00ff00' }); // Reset color
+        singlePlayerButton.setStyle({ color: '#00ff00' });  // Reset color
       })
       .on('pointerdown', () => {
         this.scene.start('Game'); // Transition to the Game scene
       })
-      .setOrigin(0.5); // Center the button horizontally
+      .setOrigin(0.5);
     menuContainer.add(singlePlayerButton);
 
     // Multiplayer Button (centered)
@@ -55,18 +56,17 @@ export default class MainMenu extends Phaser.Scene {
       color: '#00ff00',
       fontFamily: 'Arial',
       fontStyle: 'bold'
-    })
-      .setInteractive()
+    }).setInteractive()
       .on('pointerover', () => {
-        multiplayerButton.setStyle({ color: '#ffcc00' }); // Hover effect
+        multiplayerButton.setStyle({ color: '#ffcc00' });  // Hover effect
       })
       .on('pointerout', () => {
-        multiplayerButton.setStyle({ color: '#00ff00' }); // Reset color
+        multiplayerButton.setStyle({ color: '#00ff00' });  // Reset color
       })
       .on('pointerdown', () => {
-        this.showMultiplayerWindow(); // Show multiplayer window
+        this.createRoom(); // Create a new room
       })
-      .setOrigin(0.5); // Center the button horizontally
+      .setOrigin(0.5);
     menuContainer.add(multiplayerButton);
 
     // Join Game Button (centered)
@@ -75,22 +75,44 @@ export default class MainMenu extends Phaser.Scene {
       color: '#00ff00',
       fontFamily: 'Arial',
       fontStyle: 'bold'
-    })
-      .setInteractive()
+    }).setInteractive()
       .on('pointerover', () => {
-        joinGameButton.setStyle({ color: '#ffcc00' }); // Hover effect
+        joinGameButton.setStyle({ color: '#ffcc00' });  // Hover effect
       })
       .on('pointerout', () => {
-        joinGameButton.setStyle({ color: '#00ff00' }); // Reset color
+        joinGameButton.setStyle({ color: '#00ff00' });  // Reset color
       })
       .on('pointerdown', () => {
-        console.log('Join Game mode coming soon!');
+        this.joinRoom();  // Handle joining a room
       })
-      .setOrigin(0.5); // Center the button horizontally
+      .setOrigin(0.5);
     menuContainer.add(joinGameButton);
   }
 
-  showMultiplayerWindow() {
+  createRoom() {
+    this.socket.emit('createRoom');
+
+    this.socket.on('roomCode', (roomCode) => {
+      this.showMultiplayerWindow(roomCode); 
+    });
+  }
+
+  joinRoom() {
+    const roomCode = prompt("Enter room code:");
+    if (roomCode) {
+      this.socket.emit('joinRoom', roomCode);
+
+      this.socket.on('roomJoined', (roomCode) => {
+        this.showMultiplayerWindow(roomCode);
+      });
+
+      this.socket.on('roomNotFound', (message) => {
+        alert(message);
+      });
+    }
+  }
+
+  showMultiplayerWindow(roomCode) {
     // Create a new container for the multiplayer window
     const multiplayerWindow = this.add.container(this.cameras.main.width / 2, this.cameras.main.height / 2);
 
@@ -109,57 +131,32 @@ export default class MainMenu extends Phaser.Scene {
     }).setOrigin(0.5);
     multiplayerWindow.add(windowTitle);
 
-    // Display the unique code (temporary hardcoded '12345')
-    const uniqueCodeText = this.add.text(0, -60, 'Room Code: 12345', {
-      fontSize: '28px',
-      color: '#fff',
-      fontFamily: 'Arial',
-    }).setOrigin(0.5);
-    multiplayerWindow.add(uniqueCodeText);
-
-    // Waiting for players text
-    const waitingText = this.add.text(0, 0, 'Waiting for players to join...', {
+    // Room code display
+    const roomCodeText = this.add.text(0, -60, `Room Code: ${roomCode}`, {
       fontSize: '24px',
       color: '#fff',
-      fontFamily: 'Arial',
+      fontFamily: 'Arial'
     }).setOrigin(0.5);
-    multiplayerWindow.add(waitingText);
+    multiplayerWindow.add(roomCodeText);
 
-    // Available players
-    const playersText = this.add.text(0, 40, 'Player 1\nPlayer 2', {
+    // Player count display
+    const playerCountText = this.add.text(0, 0, 'Players: 1', {
       fontSize: '24px',
       color: '#fff',
-      fontFamily: 'Arial',
+      fontFamily: 'Arial'
     }).setOrigin(0.5);
-    multiplayerWindow.add(playersText);
+    multiplayerWindow.add(playerCountText);
 
-    // Start Game Button
-    const startGameButton = this.add.text(0, 120, 'Start Game', {
-      fontSize: '32px',
+    // Start game button
+    const startGameButton = this.add.text(0, 60, 'Start Game', {
+      fontSize: '24px',
       color: '#00ff00',
-      fontFamily: 'Arial',
-      fontStyle: 'bold'
-    })
-      .setInteractive()
-      .on('pointerover', () => {
-        startGameButton.setStyle({ color: '#ffcc00' }); // Hover effect
-      })
-      .on('pointerout', () => {
-        startGameButton.setStyle({ color: '#00ff00' }); // Reset color
-      })
+      fontFamily: 'Arial'
+    }).setInteractive()
       .on('pointerdown', () => {
-        console.log('Starting Game...');
-        // Transition to the Game scene or launch the multiplayer functionality here
-        this.scene.start('Game');
+        this.socket.emit('startGame', roomCode);
       })
-      .setOrigin(0.5); // Center the button horizontally
+      .setOrigin(0.5);
     multiplayerWindow.add(startGameButton);
-
-    // Close the multiplayer window when clicked outside (optional)
-    this.input.on('pointerdown', (pointer) => {
-      if (!multiplayerWindow.getBounds().contains(pointer.x, pointer.y)) {
-        multiplayerWindow.setVisible(false); // Hide the window when clicking outside
-      }
-    });
   }
 }
