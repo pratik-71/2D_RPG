@@ -6,11 +6,10 @@ export default class Hero {
     this.sprite = scene.physics.add.sprite(x, y, 'hero');
 
     this.sprite.body.setSize(1, 1);  // Adjusted size
-
     this.sprite.setCollideWorldBounds(true);
     this.createAnimations();
     this.isAttacking = false;
-    this.currentDirection = 'down'; 
+    this.currentDirection = 'down';
 
     this.scene.input.on('pointerdown', () => {
       this.attack();
@@ -28,7 +27,7 @@ export default class Hero {
           start: frameStarts[index],
           end: frameStarts[index] + 7,
         }),
-        frameRate: 20,
+        frameRate: 15,
         repeat: -1,
       });
 
@@ -48,7 +47,6 @@ export default class Hero {
     if (this.isAttacking) return;
 
     this.sprite.setVelocity(0);
-
     if (cursors.left.isDown) {
       this.sprite.setVelocityX(-200);
       this.sprite.anims.play('walk-left', true);
@@ -77,14 +75,7 @@ export default class Hero {
     this.sprite.setVelocity(0);
     this.sprite.anims.play(`hero_attack-${this.currentDirection}`);
 
-    // Detect collision with trees
-    this.scene.physics.overlap(this.sprite, this.scene.treeGroup, (hero, tree) => {
-      if (tree.takeDamage) {
-        tree.takeDamage(5);
-      }
-    });
-
-    // Reset attack state
+    // Reset attack state after the animation completes
     this.sprite.once('animationcomplete', () => {
       this.isAttacking = false;
     });
