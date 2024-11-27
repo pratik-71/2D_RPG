@@ -136,7 +136,7 @@ export default class Tree {
       tree.healthBar.fillStyle(0xff0000); // Red color for low health
       tree.healthBar.fillRect(
         tree.x - barWidth / 2,
-        tree.y - tree.height / 2 - 10, // Same position as before
+        tree.y - tree.height / 2 + 22, // Same position as before
         barWidth * healthPercentage,
         barHeight
       );

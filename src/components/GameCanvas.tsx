@@ -1,21 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import Preloader from '../scenes/Preloader';
+import MainMenu from '../scenes/MainMenu';
 import Game from '../scenes/Game';
-import "../App.css"; // Ensure this CSS file contains styles for the container
+import '../App.css';
 
 const GameCanvas: React.FC = () => {
   const phaserGame = useRef<Phaser.Game | null>(null);
-  
-  // State to track health
+
+  // State for health tracking
   const [heroHealth, setHeroHealth] = useState(100);
   const [castleHealth, setCastleHealth] = useState(100);
 
-  // State to track players and enemies count
-  const [playersCount, setPlayersCount] = useState(1); 
-  const [enemiesCount, setEnemiesCount] = useState(10); 
+  // State for players and enemies count
+  const [playersCount, setPlayersCount] = useState(1);
+  const [enemiesCount, setEnemiesCount] = useState(10);
 
-  // State to handle message input
+  // State for messages
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -29,9 +30,9 @@ const GameCanvas: React.FC = () => {
         },
         physics: {
           default: 'arcade',
-          arcade: { gravity: { y: 0 } },
+          arcade: { gravity: { y: 0 }, debug: false },
         },
-        scene: [Preloader, Game],
+        scene: [Preloader, MainMenu, Game], // Order: Preloader first, then MainMenu, then Game
       });
     }
 
@@ -41,47 +42,34 @@ const GameCanvas: React.FC = () => {
     };
   }, []);
 
-  // Update health bars when health changes
-  const updateHeroHealth = (damage: number) => {
-    setHeroHealth(prevHealth => Math.max(prevHealth - damage, 0)); // Prevent negative health
-  };
-
-  const updateCastleHealth = (damage: number) => {
-    setCastleHealth(prevHealth => Math.max(prevHealth - damage, 0)); // Prevent negative health
-  };
-
-  // Handle message input
   const handleSendMessage = () => {
-    // Handle sending the message logic
-    setMessage(''); // Clear input after sending
+    console.log('Message sent:', message);
+    setMessage('');
   };
 
   return (
     <div className="game-container">
-      {/* Game canvas */}
       <div id="phaser-container" className="phaser-container"></div>
 
+      {/* Data Panel */}
       <div className="data-panel">
-       
-        <div className="first-column">  
+        <div className="first-column">
           <div className="health-bar">
-          <h3>Hero Health   </h3>
+            <h3>Hero Health</h3>
             <div className="health-fill" style={{ width: `${heroHealth}%` }}></div>
           </div>
-                   
+
           <div className="health-bar">
-          <h3>Castle Health</h3>
+            <h3>Castle Health</h3>
             <div className="health-fill" style={{ width: `${castleHealth}%` }}></div>
           </div>
         </div>
 
-        {/* Second Column: Players and Enemies */}
         <div className="second-column">
-          <h6>Numebr Of Players: {playersCount}</h6>
-          <h6>Number Of Enemies: {enemiesCount}</h6>
+          <h6>Number of Players: {playersCount}</h6>
+          <h6>Number of Enemies: {enemiesCount}</h6>
         </div>
 
-        {/* Third Column: Message Input and Send Button */}
         <div className="third-column">
           <input
             type="text"

@@ -6,7 +6,7 @@ import Tree from '../entities/tree';
 
 export default class Game extends Phaser.Scene {
   constructor() {
-    super('game');
+    super('Game');
   }
 
   create() {
@@ -33,7 +33,7 @@ export default class Game extends Phaser.Scene {
     this.hero = new Hero(this, 500, 500);
     this.castle = new Castle(this, map);
     this.treeManager = new Tree(this, map);
-
+    
 
     // Add physics collider for hero and boundaries
     this.physics.add.collider(this.hero.sprite, boundaryLayer);
