@@ -5,7 +5,6 @@ import '../App.css'
 
 export default class MainMenu extends Phaser.Scene {
   private socket: any;
-  private playerId: string | null = null; // Store the player ID
   private playerName: string = 'Noobie'; // Default player name
   private playerNameText: Phaser.GameObjects.Text;
   private nameInputBox: Phaser.GameObjects.DOMElement | null = null;
@@ -69,7 +68,7 @@ export default class MainMenu extends Phaser.Scene {
   
 
     this.socket.on('gameStarted', (roomCode:string) => {
-      this.scene.start('Game'); // Start the game scene for all players when the host starts the game
+      this.scene.start('Game', { playerName:this.playerName }); 
     });
 
     this.socket.on('closeMultiplayerWindow',()=>{
@@ -194,11 +193,11 @@ export default class MainMenu extends Phaser.Scene {
       this.startButton = document.createElement('button');
       this.startButton.innerHTML = 'Start';
       this.startButton.style.position = 'absolute';
-      this.startButton.style.left = `${this.cameras.main.centerX + 110}px`; // Adjust position as needed
-      this.startButton.style.top = `${this.cameras.main.centerY + 50}px`; // Adjust position as needed
-      this.startButton.style.fontSize = '12px';
+      this.startButton.style.left = `${this.cameras.main.centerX - 20}px`; // Adjust position as needed
+      this.startButton.style.top = `${this.cameras.main.centerY + 70}px`; // Adjust position as needed
+      this.startButton.style.fontSize = '16px';
       this.startButton.style.color = 'white';
-      this.startButton.style.padding = '5px 10px';
+      this.startButton.style.padding = '10px 15px';
       document.body.appendChild(this.startButton); // Append button to the body
   
      }
@@ -216,13 +215,8 @@ export default class MainMenu extends Phaser.Scene {
       // Host-specific functionality
       if (isHost) {
         this.startButton.addEventListener('click', () => {
-          this.socket.emit('startGame', roomCode); // Emit start game event
-          document.body.removeChild(this.startButton);
-          this.startButton = null;
-          document.body.removeChild(this.closeButton);
-          this.closeButton = null;
-          this.multiplayerWindow.destroy();
-          this.multiplayerWindow = null;
+          this.socket.emit('startGame', roomCode); 
+          this.closeMultiplayerWindow()
         });
       } else {
         // Non-hosts see the waiting message
@@ -239,7 +233,6 @@ export default class MainMenu extends Phaser.Scene {
     }
   }
   
-
 
   closeMultiplayerWindow() {
     if (this.multiplayerWindow) {

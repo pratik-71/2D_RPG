@@ -167,18 +167,14 @@ export default class Tree {
   
     // Check if the hero is within the "leaves" area
     if (hero.y < treeLeavesTop) {
-      // Hero is above the tree, so put the hero in front of the tree (stem)
-      hero.setDepth(tree.y + 1); // Hero in front of the tree
+      hero.setDepth(tree.y + 1); 
     } else if (hero.y >= treeLeavesTop && hero.y <= treeLeavesBottom) {
-      // Hero is standing on the tree leaves area
-      hero.setDepth(tree.y + 1); // Hero in front of the tree's leaves (on top)
-      hero.y = treeLeavesBottom - hero.height / 2; // Adjust hero's position to stand on the leaves
+      hero.setDepth(tree.y + 1); 
+      hero.y = treeLeavesBottom - hero.height / 2;
     } else if (hero.y > treeBottom) {
-      // Hero is below the tree (stem area)
-      hero.setDepth(tree.y + 1); // Hero in front of the tree (stem)
+      hero.setDepth(tree.y + 1); 
     } else {
-      // Hero is at or near the base of the tree
-      hero.setDepth(tree.y - 1); // Hero behind the tree (stem area)
+      hero.setDepth(tree.y - 1); 
     }
   }
   

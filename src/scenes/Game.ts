@@ -9,8 +9,14 @@ export default class Game extends Phaser.Scene {
     super('Game');
   }
 
+  init(data) {
+   const {playerName} = data
+   this.playerName = playerName
+  }
+
   create() {
     const map = this.make.tilemap({ key: 'game_environment' });
+
     
     // Load tilesets
     const dungeon_tileset = map.addTilesetImage('duneon', 'dungeon_tiles');
@@ -30,7 +36,7 @@ export default class Game extends Phaser.Scene {
     boundaryLayer.setCollisionByExclusion([-1]);
 
 
-    this.hero = new Hero(this, 500, 500);
+    this.hero = new Hero(this, 500, 500,this.playerName );
     this.castle = new Castle(this, map);
     this.treeManager = new Tree(this, map);
     

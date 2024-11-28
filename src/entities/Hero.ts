@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 
 export default class Hero {
-  constructor(scene, x, y) {
+  constructor(scene, x, y, playerName = 'Noobie') {
     this.scene = scene;
-    this.sprite = scene.physics.add.sprite(x, y, 'hero');
+    this.sprite = scene.physics.add.sprite(x, y, 'hero');  // Hero sprite
 
     this.sprite.body.setSize(1, 1);  // Adjusted size
     this.sprite.setCollideWorldBounds(true);
@@ -11,6 +11,15 @@ export default class Hero {
     this.isAttacking = false;
     this.currentDirection = 'down';
 
+    // Add a text object for displaying the player's name
+    this.nameText = this.scene.add.text(
+      x,               // Position horizontally in sync with hero
+      y - 40,          // Slightly above the hero (adjusted Y position)
+      playerName,
+      { fontSize: '9px', fontFamily: 'Arial', fill: 'white', align: 'center' }  
+    ).setOrigin(0.5, 0.5);
+
+    // Handle attack on pointer down
     this.scene.input.on('pointerdown', () => {
       this.attack();
     });
@@ -66,6 +75,9 @@ export default class Hero {
     } else {
       this.sprite.anims.stop();
     }
+
+    // Update the name text position above the hero’s head
+    this.nameText.setPosition(this.sprite.x, this.sprite.y - 20); // Slightly higher
   }
 
   attack() {
@@ -79,5 +91,10 @@ export default class Hero {
     this.sprite.once('animationcomplete', () => {
       this.isAttacking = false;
     });
+  }
+
+  // Method to update the player's name
+  updateName(newName) {
+    this.nameText.setText(newName);
   }
 }
