@@ -163,3 +163,8 @@ button {
   text-align: center;
   margin-bottom: 20px;
 }
+.custom-toast {
+  font-size: 12px !important; /* Adjust font size */
+  padding: 2px 2px !important; /* Adjust padding */
+  border-radius: 5px !important; /* Optional: to round corners */
+}

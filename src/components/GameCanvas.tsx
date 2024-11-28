@@ -23,10 +23,6 @@ const GameCanvas: React.FC = () => {
 
   // Example of triggering a disconnection toast
   const handleDisconnection = () => {
-    toast.error('You have been disconnected!', {
-      position: toast.POSITION.TOP_RIGHT,
-      autoClose: 5000,
-    });
   };
 
   useEffect(() => {
