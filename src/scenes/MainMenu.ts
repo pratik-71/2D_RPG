@@ -179,18 +179,25 @@ export default class MainMenu extends Phaser.Scene {
       this.multiplayerWindow.destroy();
       this.multiplayerWindow = null;
     }
-
+  
     // Remove the close button
     if (this.closeButton) {
       this.closeButton.removeEventListener('click', this.closeMultiplayerWindow);
       document.body.removeChild(this.closeButton); // Remove the close button from the document
       this.closeButton = null;
     }
-
+  
+    // Emit disconnectPlayer event to server
+    if (this.socket && this.playerName) {
+      // Assume roomCode is accessible (you can pass it as a parameter or store it)
+      this.socket.emit('disconnectPlayer', this.currentRoomCode, this.playerName); // Replace `this.currentRoomCode` with actual room code
+    }
+  
     // Destroy player name texts
     this.playerNameTexts.forEach(text => text.destroy());
     this.playerNameTexts = [];
   }
+  
 
   updatePlayerCount(playerCount: number, playerNames: string[]) {
     this.playerCountText.setText(`Players: ${playerCount}`);
