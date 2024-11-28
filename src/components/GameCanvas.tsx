@@ -32,6 +32,9 @@ const GameCanvas: React.FC = () => {
           default: 'arcade',
           arcade: { gravity: { y: 0 }, debug: false },
         },
+        dom:{
+          createContainer:true
+        },
         scene: [Preloader, MainMenu, Game], // Order: Preloader first, then MainMenu, then Game
       });
     }
