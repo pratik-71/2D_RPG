@@ -3,6 +3,8 @@ import Phaser from 'phaser';
 import Preloader from '../scenes/Preloader';
 import MainMenu from '../scenes/MainMenu';
 import Game from '../scenes/Game';
+import { ToastContainer, toast } from 'react-toastify'; // Importing Toastify
+import 'react-toastify/dist/ReactToastify.css'; // Importing Toastify CSS
 import '../App.css';
 
 const GameCanvas: React.FC = () => {
@@ -19,6 +21,14 @@ const GameCanvas: React.FC = () => {
   // State for messages
   const [message, setMessage] = useState('');
 
+  // Example of triggering a disconnection toast
+  const handleDisconnection = () => {
+    toast.error('You have been disconnected!', {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 5000,
+    });
+  };
+
   useEffect(() => {
     if (!phaserGame.current) {
       phaserGame.current = new Phaser.Game({
@@ -32,12 +42,15 @@ const GameCanvas: React.FC = () => {
           default: 'arcade',
           arcade: { gravity: { y: 0 }, debug: false },
         },
-        dom:{
-          createContainer:true
+        dom: {
+          createContainer: true,
         },
-        scene: [Preloader, MainMenu, Game], // Order: Preloader first, then MainMenu, then Game
+        scene: [Preloader, MainMenu, Game], 
       });
     }
+
+    // Simulate a disconnection event after 5 seconds for testing
+    setTimeout(handleDisconnection, 5000);
 
     return () => {
       phaserGame.current?.destroy(true);
@@ -86,6 +99,9 @@ const GameCanvas: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* ToastContainer for showing notifications */}
+      <ToastContainer limit={3} />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { toast } from 'react-toastify';
 import io from 'socket.io-client';
 
 export default class MainMenu extends Phaser.Scene {
@@ -134,6 +135,11 @@ export default class MainMenu extends Phaser.Scene {
   }
 
   showMultiplayerWindow(roomCode: string, playerNames: string[],isHost:boolean) {
+    toast.success('Room Created Successfully!', {
+      position: 'top-center',
+      autoClose: 5000,
+    });
+    
     if (!this.multiplayerWindow) {
       this.multiplayerWindow = this.add.container(this.cameras.main.width / 2, this.cameras.main.height / 2);
 
@@ -167,12 +173,7 @@ export default class MainMenu extends Phaser.Scene {
 
       // Handle button click
       this.closeButton.addEventListener('click', () => {
-        this.socket.emit('closeRoom', this.currentRoomCode);
         this.closeMultiplayerWindow();
-      });
-
-      this.socket.on('roomClosed', () => {
-        alert("Room got closed");
       });
 
       if (isHost) {
