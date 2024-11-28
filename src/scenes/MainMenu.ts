@@ -11,6 +11,7 @@ export default class MainMenu extends Phaser.Scene {
   private multiplayerWindow: Phaser.GameObjects.Container | null = null;
   private playerNameTexts: Phaser.GameObjects.Text[] = []; // List to store player name texts
   private closeButton: HTMLElement | null = null; // Close button for multiplayer window
+  private isHost: boolean = false;
 
   constructor() {
     super({ key: 'MainMenu' });
@@ -53,8 +54,9 @@ export default class MainMenu extends Phaser.Scene {
     menuContainer.add(this.createButton('Join Game', 120, () => this.joinRoom()));
 
     // Listen for room state updates
-    this.socket.on('updateRoomState', (roomCode: string, playerCount: number, playerNames: string[]) => {
-      this.showMultiplayerWindow(roomCode, playerNames);
+    this.socket.on('updateRoomState', (roomCode: string, playerCount: number, playerNames: string[],hostId:string) => {
+      this.isHost = (this.socket.id === hostId); 
+      this.showMultiplayerWindow(roomCode, playerNames, this.isHost);
       this.updatePlayerCount(playerCount, playerNames);
     });
   }
@@ -131,7 +133,7 @@ export default class MainMenu extends Phaser.Scene {
     }
   }
 
-  showMultiplayerWindow(roomCode: string, playerNames: string[]) {
+  showMultiplayerWindow(roomCode: string, playerNames: string[],isHost:boolean) {
     if (!this.multiplayerWindow) {
       this.multiplayerWindow = this.add.container(this.cameras.main.width / 2, this.cameras.main.height / 2);
 
@@ -165,8 +167,36 @@ export default class MainMenu extends Phaser.Scene {
 
       // Handle button click
       this.closeButton.addEventListener('click', () => {
+        this.socket.emit('closeRoom', this.currentRoomCode);
         this.closeMultiplayerWindow();
       });
+
+      this.socket.on('roomClosed', () => {
+        alert("Room got closed");
+      });
+
+      if (isHost) {
+        // Show the "Start Game" button for the host
+        const startButton = this.add.text(-60, 100, 'Start Game', {
+          fontSize: '24px',
+          color: '#00ff00',
+          fontFamily: 'Arial',
+          backgroundColor: '#444',
+          padding: { x: 10, y: 5 },
+        }).setInteractive()
+          .on('pointerdown', () => {
+            this.socket.emit('startGame', roomCode);
+          });
+        this.multiplayerWindow.add(startButton);
+      } else {
+        // Show the "Waiting for host to start the game" message for non-hosts
+        const waitingText = this.add.text(0, 100, 'Waiting for host to start the game...', {
+          fontSize: '20px',
+          color: '#ffcc00',
+          fontFamily: 'Arial',
+        }).setOrigin(0.5);
+        this.multiplayerWindow.add(waitingText);
+      }
 
       // Make the close button functional but outside Phaser's event system
       windowBackground.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer) => pointer.stopPropagation());
