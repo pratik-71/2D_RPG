@@ -27,9 +27,9 @@ export default class Tree {
       tree.setOrigin(0.5, 0.5);
       tree.setImmovable(true);
       tree.body.pushable = false;
-
-      // Initialize tree health
       tree.health = 20;
+      tree.setDepth(tree.y);
+
 
       // Create an invisible sensor for attack detection
       tree.attackSensor = this.scene.physics.add.sprite(
@@ -42,8 +42,6 @@ export default class Tree {
       tree.attackSensor.body.setAllowGravity(false);
       tree.attackSensor.body.setImmovable(true);
       tree.attackSensor.body.moves = false;
-
-      // Set a flag to handle attack cooldown
       tree.isDamaged = false;
 
       // Create a graphics object for the health bar above the tree
@@ -83,15 +81,9 @@ export default class Tree {
           // Ensure damage is only dealt once per attack
           if (this.scene.hero.isAttacking && !tree.isDamaged) {
             tree.isDamaged = true;
-
-            // Wait for the sword animation to complete before dealing damage
             this.scene.hero.sprite.once('animationcomplete', () => {
-              // Ensure health is reduced after animation completion
               tree.takeDamage(5);
-              // Show the health bar for 5 seconds after the attack
               this.showHealthBarForDuration(tree);
-
-              // Reset isDamaged flag to allow future attacks
               tree.isDamaged = false;
             });
           }
@@ -104,7 +96,6 @@ export default class Tree {
 
   // Method to update the health bar
   updateHealthBar(tree) {
-    // Clear the previous health bars
     tree.healthBar.clear();
     tree.healthBarBackground.clear();
 
@@ -156,22 +147,7 @@ export default class Tree {
 
   updateDepth(tree) {
     const hero = this.scene.hero.sprite;
-  
-    // Define the tree's top and bottom boundaries
-    const treeBottom = tree.y + tree.height / 2;
-    const treeTop = tree.y - tree.height / 2;
-  
-    // Define the "leaves" area (top portion of the tree)
-    const treeLeavesTop = tree.y - tree.height / 3;  // Adjust this as needed (top 33% of the tree)
-    const treeLeavesBottom = tree.y - tree.height / 2; // Bottom of the leaves
-  
-    // Check if the hero is within the "leaves" area
-    if (hero.y < treeLeavesTop) {
-      hero.setDepth(tree.y + 1); 
-    } else if (hero.y >= treeLeavesTop && hero.y <= treeLeavesBottom) {
-      hero.setDepth(tree.y + 1); 
-      hero.y = treeLeavesBottom - hero.height / 2;
-    } else if (hero.y > treeBottom) {
+    if (hero.y > tree.y) {
       hero.setDepth(tree.y + 1); 
     } else {
       hero.setDepth(tree.y - 1); 

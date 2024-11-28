@@ -4,20 +4,22 @@ export default class Hero {
   constructor(scene, x, y, playerName = 'Noobie') {
     this.scene = scene;
     this.sprite = scene.physics.add.sprite(x, y, 'hero');  // Hero sprite
-
     this.sprite.body.setSize(1, 1);  // Adjusted size
     this.sprite.setCollideWorldBounds(true);
+    this.sprite.setDepth(2);  // Ensure hero sprite is above trees
+
     this.createAnimations();
     this.isAttacking = false;
     this.currentDirection = 'down';
 
     // Add a text object for displaying the player's name
     this.nameText = this.scene.add.text(
-      x,               // Position horizontally in sync with hero
-      y - 40,          // Slightly above the hero (adjusted Y position)
+      x,
+      y - 20,
       playerName,
-      { fontSize: '9px', fontFamily: 'Arial', fill: 'white', align: 'center' }  
-    ).setOrigin(0.5, 0.5);
+      { fontSize: '9px', fontFamily: 'Arial', fill: 'white', align: 'center' }
+    ).setOrigin(0.5, 0.5)
+     .setDepth(3);  // Set a higher depth for the name text
 
     // Handle attack on pointer down
     this.scene.input.on('pointerdown', () => {
@@ -77,7 +79,7 @@ export default class Hero {
     }
 
     // Update the name text position above the hero’s head
-    this.nameText.setPosition(this.sprite.x, this.sprite.y - 20); // Slightly higher
+    this.nameText.setPosition(this.sprite.x, this.sprite.y - 20);
   }
 
   attack() {
