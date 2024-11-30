@@ -1,24 +1,25 @@
 import Phaser from 'phaser';
 import Castle from '../entities/Castle';
 import Hero from '../entities/Hero';
-import Tree from '../entities/tree';
-
+import Tree from '../entities/Tree';
 
 export default class Game extends Phaser.Scene {
   constructor() {
     super('Game');
-  }
-  
-  init(){
-   const {playerName,playerCount,players} = this.data
-   this.playerName = playerName
-   this.playerCount = playerCount
-   this.players = players
+    this.heroes = [];  // Initialize heroes array
   }
 
-  create() {
+  init(data) {
+    const { playerName = 'Noobie', playerCount = 1, players = [], socketId = '' } = data || {};
+    this.playerName = playerName;
+    this.playerCount = playerCount;
+    this.players = players;
+    this.socketId = socketId;
+  }
+
+  async create() {
     const map = this.make.tilemap({ key: 'game_environment' });
-    
+
     // Load tilesets
     const dungeon_tileset = map.addTilesetImage('duneon', 'dungeon_tiles');
     const grass_tiles_tileset = map.addTilesetImage('grass_tiles', 'grass_tiles');
@@ -36,33 +37,44 @@ export default class Game extends Phaser.Scene {
     const boundaryLayer = map.createLayer('boundry', dungeon_tileset, 0, 0);
     boundaryLayer.setCollisionByExclusion([-1]);
 
+    // Create heroes for all players
+    this.players.forEach((player, index) => {
+      const spawnX = 500 + index * 50;
+      const spawnY = 500;
+      const hero = new Hero(this, spawnX, spawnY, player.name || `Player${index + 1}`, player.id);
+      this.heroes.push(hero);
 
-    this.hero = new Hero(this, 500, 500,this.playerName);
+      // Enable physics and collisions for each hero
+      this.physics.add.collider(hero.sprite, boundaryLayer);
+
+      // Enable keyboard input for the local player only
+      if (this.socketId === player.id) { // Correct comparison
+        this.localHero = hero;  // Track the local player
+        this.cursors = this.input.keyboard.addKeys({
+          up: 'W',
+          down: 'S',
+          left: 'A',
+          right: 'D'
+        });
+      }
+    });
+
     this.castle = new Castle(this, map);
     this.treeManager = new Tree(this, map);
-    
 
-    // Add physics collider for hero and boundaries
-    this.physics.add.collider(this.hero.sprite, boundaryLayer);
-
-    // Set the camera to follow the hero sprite
-    this.cameras.main.startFollow(this.hero.sprite, true, 0.1, 0.1);
+    // Set the camera to follow the local player's hero
+    this.cameras.main.startFollow(this.localHero.sprite, true, 0.1, 0.1);
     this.cameras.main.setZoom(2);
 
-    // Set camera bounds to prevent scrolling beyond the map
+    // Set camera and world bounds
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-
-    // Enable keyboard input
-    this.cursors = this.input.keyboard.addKeys({
-      up: 'W',
-      down: 'S',
-      left: 'A',
-      right: 'D'
-    });
   }
 
   update() {
-    this.hero.update(this.cursors);
+    // Update only the local hero
+    if (this.localHero && this.cursors) {
+      this.localHero.update(this.cursors);
+    }
   }
 }

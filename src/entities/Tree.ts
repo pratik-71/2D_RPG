@@ -30,7 +30,6 @@ export default class Tree {
       tree.health = 20;
       tree.setDepth(tree.y);
 
-
       // Create an invisible sensor for attack detection
       tree.attackSensor = this.scene.physics.add.sprite(
         tree.x,
@@ -70,27 +69,30 @@ export default class Tree {
       this.treeGroup.add(tree);
 
       // Hero-tree collider for blocking movement
-      this.scene.physics.add.collider(this.scene.hero.sprite, tree, () => {
-        this.updateDepth(tree);
+      this.scene.heroes.forEach(hero => {
+        this.scene.physics.add.collider(hero.sprite, tree, () => {
+          this.updateDepth(tree, hero);
+        });
+
+        // Overlap between hero and attack sensor for damage handling
+        this.scene.physics.add.overlap(
+          hero.sprite,
+          tree.attackSensor,
+          () => {
+            // Ensure damage is only dealt once per attack
+            if (hero.isAttacking && !tree.isDamaged) {
+              tree.isDamaged = true;
+              hero.sprite.once('animationcomplete', () => {
+                tree.takeDamage(5);
+                this.showHealthBarForDuration(tree);
+                tree.isDamaged = false;
+              });
+            }
+          },
+          null,
+          this
+        );
       });
-      // Overlap between hero and attack sensor for damage handling
-      this.scene.physics.add.overlap(
-        this.scene.hero.sprite,
-        tree.attackSensor,
-        () => {
-          // Ensure damage is only dealt once per attack
-          if (this.scene.hero.isAttacking && !tree.isDamaged) {
-            tree.isDamaged = true;
-            this.scene.hero.sprite.once('animationcomplete', () => {
-              tree.takeDamage(5);
-              this.showHealthBarForDuration(tree);
-              tree.isDamaged = false;
-            });
-          }
-        },
-        null,
-        this
-      );
     });
   }
 
@@ -133,6 +135,7 @@ export default class Tree {
       );
     }
   }
+
   // Method to show the health bar for 5 seconds after the hero attacks
   showHealthBarForDuration(tree) {
     tree.healthBarBackground.setAlpha(1); // Show the background bar
@@ -145,15 +148,11 @@ export default class Tree {
     });
   }
 
-  updateDepth(tree) {
-    const hero = this.scene.hero.sprite;
-    if (hero.y > tree.y) {
-      hero.setDepth(tree.y + 1); 
+  updateDepth(tree, hero) {
+    if (hero.sprite.y > tree.y) {
+      hero.sprite.setDepth(tree.y + 1); 
     } else {
-      hero.setDepth(tree.y - 1); 
+      hero.sprite.setDepth(tree.y - 1); 
     }
   }
-  
-  
-  
 }

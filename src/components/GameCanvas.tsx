@@ -36,12 +36,15 @@ const GameCanvas: React.FC = () => {
         },
         physics: {
           default: 'arcade',
-          arcade: { gravity: { y: 0 }, debug: false },
+          arcade: { gravity: { y: 0 } },
         },
         dom: {
           createContainer: true,
         },
         scene: [Preloader, MainMenu, Game], 
+        input:{
+          keyboard:true
+        }
       });
     }
 
