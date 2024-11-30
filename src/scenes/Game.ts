@@ -10,15 +10,16 @@ export default class Game extends Phaser.Scene {
   constructor() {
     super('Game');
     this.heroes = [];  // Initialize heroes array
-    this.socket = io.connect('http://localhost:3000');
   }
 
   init(data) {
-    const { playerName = 'Noobie', playerCount = 1, players = [], socketId = '' } = data || {};
+    const { playerName = 'Noobie', playerCount = 1, players = [], socketId = '',roomCode,socket } = data || {};
     this.playerName = playerName;
     this.playerCount = playerCount;
     this.players = players;
     this.socketId = socketId;
+    this.roomCode = roomCode
+    this.socket = socket
   }
 
   async create() {
@@ -75,17 +76,23 @@ export default class Game extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
     this.socket.on('updatePlayers', (updatedPlayers) => {
+      console.log("inside --------- ");
       updatedPlayers.forEach((playerData) => {
-        if (playerData.socketId !== this.socketId) { // Don't update local player
-          const hero = this.heroes.find(h => h.socketId === playerData.socketId);
+        console.log("pos - 1");
+        if (playerData.id !== this.socketId) { // Don't update local player
+          const hero = this.heroes.find(h => h.socketId === playerData.id);
+          if (!hero) {
+            console.log(`Hero with ID ${playerData.id} not found!`);
+          }
           if (hero) {
-            console.log(playerData.x,playerData.y)
+            console.log(playerData.x, playerData.y);
             hero.sprite.setPosition(playerData.x, playerData.y);
             hero.sprite.anims.play(`walk-${playerData.direction}`, true);
           }
         }
       });
     });
+    
 
 
   }
@@ -100,7 +107,8 @@ export default class Game extends Phaser.Scene {
         socketId: this.socketId, 
         x, 
         y,
-        direction: this.localHero.currentDirection
+        direction: this.localHero.currentDirection,
+        roomCode : this.roomCode
       });
     }
   }

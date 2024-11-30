@@ -68,7 +68,7 @@ export default class MainMenu extends Phaser.Scene {
   
 
     this.socket.on('gameStarted', (roomCode:string,playerCount:integer,players:Array) => {
-      this.scene.start('Game', { playerName:this.playerName,playerCount:playerCount,players:players,socketId:this.socket.id }); 
+      this.scene.start('Game', { playerName:this.playerName,playerCount:playerCount,players:players,socketId:this.socket.id,roomCode:roomCode,socket:this.socket }); 
     });
 
     this.socket.on('closeMultiplayerWindow',()=>{
@@ -217,12 +217,7 @@ export default class MainMenu extends Phaser.Scene {
         this.startButton.addEventListener('click', () => {
           this.socket.emit('startGame', roomCode); 
           this.closeMultiplayerWindow()
-          this.multiplayerWindow.destroy();
-      this.multiplayerWindow = null;
-      document.body.removeChild(this.closeButton);
-      this.closeButton = null;
-      document.body.removeChild(this.startButton);
-      this.startButton = null;
+
         });
       } else {
         // Non-hosts see the waiting message

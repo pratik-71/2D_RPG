@@ -23,11 +23,12 @@ export default class Hero {
      .setDepth(3);  // Set a higher depth for the name text
 
     // Handle attack on pointer down
-    this.scene.input.on('pointerdown', () => {
-      if (this.scene.socketId === this.socketId) {  // Only allow attack for the local player
-        this.attack();
-      }
-    });
+    if (this.scene.socketId === this.socketId) {  // Only for the local player
+      this.scene.input.on('pointerdown', this.handleAttack, this);
+    }
+
+    // Remove event listeners when the scene shuts down
+    this.scene.events.on('shutdown', this.cleanupEvents, this);
   }
 
   // Create walk and attack animations for each direction
@@ -87,6 +88,13 @@ export default class Hero {
     this.nameText.setPosition(this.sprite.x, this.sprite.y - 20);
   }
 
+  // Handle attack input and animation
+  handleAttack() {
+    if (this.scene.socketId === this.socketId) {  // Only allow attack for the local player
+      this.attack();
+    }
+  }
+
   // Attack method to handle attack animations
   attack() {
     if (this.isAttacking) return;
@@ -112,5 +120,10 @@ export default class Hero {
   // Method to update the player's name
   updateName(newName) {
     this.nameText.setText(newName);
+  }
+
+  // Cleanup method to remove event listeners when the scene is destroyed
+  cleanupEvents() {
+    this.scene.input.off('pointerdown', this.handleAttack, this);
   }
 }
