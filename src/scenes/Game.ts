@@ -82,7 +82,7 @@ export default class Game extends Phaser.Scene {
         if (playerData.id !== this.socketId) { // Don't update local player
           const hero = this.heroes.find(h => h.socketId === playerData.id);
           if (!hero) {
-            console.log(`Hero with ID ${playerData.id} not found!`);
+            console.log(`Hero  swith ID ${playerData.id} not found!`);
           }
           if (hero) {
             console.log(playerData.x, playerData.y);
