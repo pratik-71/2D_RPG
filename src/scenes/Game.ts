@@ -2,11 +2,15 @@ import Phaser from 'phaser';
 import Castle from '../entities/Castle';
 import Hero from '../entities/Hero';
 import Tree from '../entities/Tree';
+import { io } from 'socket.io-client';
 
 export default class Game extends Phaser.Scene {
+  socket: any;
+
   constructor() {
     super('Game');
     this.heroes = [];  // Initialize heroes array
+    this.socket = io.connect('http://localhost:3000');
   }
 
   init(data) {
@@ -69,12 +73,36 @@ export default class Game extends Phaser.Scene {
     // Set camera and world bounds
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+    this.socket.on('updatePlayers', (updatedPlayers) => {
+      updatedPlayers.forEach((playerData) => {
+        if (playerData.socketId !== this.socketId) { // Don't update local player
+          const hero = this.heroes.find(h => h.socketId === playerData.socketId);
+          if (hero) {
+            console.log(playerData.x,playerData.y)
+            hero.sprite.setPosition(playerData.x, playerData.y);
+            hero.sprite.anims.play(`walk-${playerData.direction}`, true);
+          }
+        }
+      });
+    });
+
+
   }
 
   update() {
-    // Update only the local hero
     if (this.localHero && this.cursors) {
       this.localHero.update(this.cursors);
+  
+      // Emit the local player's position to the server
+      const { x, y } = this.localHero.sprite;
+      this.socket.emit('updatePlayerPosition', { 
+        socketId: this.socketId, 
+        x, 
+        y,
+        direction: this.localHero.currentDirection
+      });
     }
   }
+  
 }

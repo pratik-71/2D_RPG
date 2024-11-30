@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 
 export default class Hero {
-  constructor(scene, x, y, playerName = 'Noobie') {
+  constructor(scene, x, y, playerName = 'Noobie', socketId) {
     this.scene = scene;
+    this.socketId = socketId;  // Store the socketId for identifying the player
     this.sprite = scene.physics.add.sprite(x, y, 'hero');  // Hero sprite
     this.sprite.body.setSize(1, 1);  // Adjusted size
     this.sprite.setCollideWorldBounds(true);
@@ -23,10 +24,13 @@ export default class Hero {
 
     // Handle attack on pointer down
     this.scene.input.on('pointerdown', () => {
-      this.attack();
+      if (this.scene.socketId === this.socketId) {  // Only allow attack for the local player
+        this.attack();
+      }
     });
   }
 
+  // Create walk and attack animations for each direction
   createAnimations() {
     const directions = ['down', 'left', 'right', 'up'];
     const frameStarts = [0, 8, 16, 24];
@@ -54,6 +58,7 @@ export default class Hero {
     });
   }
 
+  // Update method to control movement and animations
   update(cursors) {
     if (this.isAttacking) return;
 
@@ -82,13 +87,22 @@ export default class Hero {
     this.nameText.setPosition(this.sprite.x, this.sprite.y - 20);
   }
 
+  // Attack method to handle attack animations
   attack() {
     if (this.isAttacking) return;
-
+  
     this.isAttacking = true;
     this.sprite.setVelocity(0);
     this.sprite.anims.play(`hero_attack-${this.currentDirection}`);
-
+  
+    // Emit attack event to the server
+    this.scene.socket.emit('playerAttack', {
+      socketId: this.socketId,
+      direction: this.currentDirection,
+      x: this.sprite.x,
+      y: this.sprite.y
+    });
+  
     // Reset attack state after the animation completes
     this.sprite.once('animationcomplete', () => {
       this.isAttacking = false;
