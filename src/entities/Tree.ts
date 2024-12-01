@@ -1,10 +1,44 @@
 import Phaser from 'phaser';
 
+import Phaser from 'phaser';
+
 export default class Tree {
-  constructor(scene, map) {
+  constructor(scene, map, socket,roomCode) {
     this.scene = scene;
     this.map = map;
+    this.socket = socket;  // Socket connection passed to the class
+    this.treeIdCounter = 1; // Counter to generate unique tree IDs
+    this.roomCode = roomCode
     this.initTrees();
+
+    // Listen for updated tree health from the backend
+    this.socket.on("updateTreeHealth", (data) => {
+      const { treeId, health } = data;
+      const tree = this.treeGroup.getChildren().find(t => t.id === treeId);
+    
+      console.log("pos-1");
+    
+      if (tree) {
+        console.log("pos-2");
+    
+        // Update tree health
+        tree.health = health;
+        this.updateHealthBar(tree); 
+        tree.healthBarBackground.setAlpha(1);
+        tree.healthBar.setAlpha(1);
+        this.scene.time.delayedCall(3000, () => { 
+          tree.healthBarBackground.setAlpha(0);
+          tree.healthBar.setAlpha(0);
+        });
+        if (tree.health <= 0) {
+          tree.attackSensor.destroy();
+          tree.destroy();
+          tree.healthBarBackground.destroy();
+          tree.healthBar.destroy();
+        }
+      }
+    });
+    
   }
 
   initTrees() {
@@ -15,13 +49,18 @@ export default class Tree {
     }
 
     this.treeGroup = this.scene.physics.add.group();
-
     objectLayer.objects.forEach((treeObject) => {
+      const treeId = `tree${this.treeIdCounter++}`;
       const tree = this.scene.physics.add.sprite(
         treeObject.x + treeObject.width / 2,
         treeObject.y - treeObject.height / 2,
         'tree_tiles'
       );
+
+      // Assign unique ID to each tree
+      tree.id = treeId;
+
+      console.log(`Tree ID: ${tree.id}`);
 
       tree.body.setSize(treeObject.width - 20, treeObject.height - 12);
       tree.setOrigin(0.5, 0.5);
@@ -51,21 +90,6 @@ export default class Tree {
       tree.healthBarBackground.setAlpha(0);
       tree.healthBar.setAlpha(0);
 
-      // Method to handle damage
-      tree.takeDamage = (damage) => {
-        if (tree.health <= 0) return; // Don't allow damage if tree is already destroyed
-        tree.health -= damage;
-        console.log(`Tree health: ${tree.health}`);
-        this.updateHealthBar(tree); // Update health bar after taking damage
-        if (tree.health <= 0) {
-          console.log('Tree destroyed');
-          tree.attackSensor.destroy();
-          tree.destroy();
-          tree.healthBarBackground.destroy(); // Remove the health bar when the tree is destroyed
-          tree.healthBar.destroy();
-        }
-      };
-
       this.treeGroup.add(tree);
 
       // Hero-tree collider for blocking movement
@@ -83,8 +107,13 @@ export default class Tree {
             if (hero.isAttacking && !tree.isDamaged) {
               tree.isDamaged = true;
               hero.sprite.once('animationcomplete', () => {
-                tree.takeDamage(5);
-                this.showHealthBarForDuration(tree);
+                // Emit the attack event to backend for processing damage
+                const damage = 5; // Example damage, adjust as needed
+                this.socket.emit('damageTree', { 
+                  treeId: tree.id,
+                  damage: damage, // Send damage value
+                  roomCode:this.roomCode
+                });
                 tree.isDamaged = false;
               });
             }
@@ -100,8 +129,6 @@ export default class Tree {
   updateHealthBar(tree) {
     tree.healthBar.clear();
     tree.healthBarBackground.clear();
-
-    // Draw the background bar (full health)
     const barWidth = 50;
     const barHeight = 5;
 
@@ -115,7 +142,6 @@ export default class Tree {
 
     // Draw the foreground bar (current health)
     const healthPercentage = tree.health / 20;
-
     tree.healthBar.fillStyle(0x00ff00); // Green color for the current health
     tree.healthBar.fillRect(
       tree.x - barWidth / 2,
@@ -136,23 +162,13 @@ export default class Tree {
     }
   }
 
-  // Method to show the health bar for 5 seconds after the hero attacks
-  showHealthBarForDuration(tree) {
-    tree.healthBarBackground.setAlpha(1); // Show the background bar
-    tree.healthBar.setAlpha(1); // Show the health bar
-
-    // Hide the health bar after 5 seconds
-    this.scene.time.delayedCall(5000, () => {
-      tree.healthBarBackground.setAlpha(0);
-      tree.healthBar.setAlpha(0);
-    });
-  }
-
+  // Method to update depth based on the hero's position
   updateDepth(tree, hero) {
     if (hero.sprite.y > tree.y) {
-      hero.sprite.setDepth(tree.y + 1); 
+      hero.sprite.setDepth(tree.y + 1);
     } else {
-      hero.sprite.setDepth(tree.y - 1); 
+      hero.sprite.setDepth(tree.y - 1);
     }
   }
 }
+

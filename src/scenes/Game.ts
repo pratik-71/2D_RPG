@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import Castle from '../entities/Castle';
 import Hero from '../entities/Hero';
 import Tree from '../entities/Tree';
-import { io } from 'socket.io-client';
+
 
 export default class Game extends Phaser.Scene {
   socket: any;
@@ -65,11 +65,11 @@ export default class Game extends Phaser.Scene {
     });
 
     this.castle = new Castle(this, map);
-    this.treeManager = new Tree(this, map);
+    this.treeManager = new Tree(this, map,this.socket,this.roomCode);
 
     // Set the camera to follow the local player's hero
     this.cameras.main.startFollow(this.localHero.sprite, true, 0.1, 0.1);
-    this.cameras.main.setZoom(2);
+    this.cameras.main.setZoom(2.5);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
@@ -94,7 +94,7 @@ export default class Game extends Phaser.Scene {
     });
 
         // Listen for attack events from other players
-        this.socket.on('playerAttacked', (attackData) => {
+     this.socket.on('playerAttacked', (attackData) => {
           const { socketId, x, y, direction, attackAnimationKey } = attackData;
           console.log(`Received attack from player ${socketId} at (${x}, ${y}) in direction ${direction}`);
     
@@ -106,7 +106,7 @@ export default class Game extends Phaser.Scene {
           } else {
             console.log(`Hero not found for player ${socketId}`);
           }
-        });
+    });
     
   }
 
