@@ -1,14 +1,14 @@
 import Phaser from 'phaser';
 
 export default class Hero {
-  constructor(scene, x, y, playerName = 'Noobie', socketId) {
+  constructor(scene, x, y, playerName = 'Noobie', socketId,socket) {
     this.scene = scene;
     this.socketId = socketId;  // Store the socketId for identifying the player
     this.sprite = scene.physics.add.sprite(x, y, 'hero');  // Hero sprite
     this.sprite.body.setSize(1, 1);  // Adjusted size
     this.sprite.setCollideWorldBounds(true);
     this.sprite.setDepth(2);  // Ensure hero sprite is above trees
-
+    this.socket = socket
     this.createAnimations();
     this.isAttacking = false;
     this.currentDirection = 'down';
@@ -61,32 +61,65 @@ export default class Hero {
 
   // Update method to control movement and animations
   update(cursors) {
-    if (this.isAttacking) return;
-
-    this.sprite.setVelocity(0);
+    const { sprite } = this;
+    let isMoving = false;
+    
+    sprite.setVelocity(0);  // Reset velocity
+    
     if (cursors.left.isDown) {
-      this.sprite.setVelocityX(-200);
-      this.sprite.anims.play('walk-left', true);
-      this.currentDirection = 'left';
+      this.move('left', -200, 0);
+      isMoving = true;
     } else if (cursors.right.isDown) {
-      this.sprite.setVelocityX(200);
-      this.sprite.anims.play('walk-right', true);
-      this.currentDirection = 'right';
+      this.move('right', 200, 0);
+      isMoving = true;
     } else if (cursors.up.isDown) {
-      this.sprite.setVelocityY(-200);
-      this.sprite.anims.play('walk-up', true);
-      this.currentDirection = 'up';
+      this.move('up', 0, -200);
+      isMoving = true;
     } else if (cursors.down.isDown) {
-      this.sprite.setVelocityY(200);
-      this.sprite.anims.play('walk-down', true);
-      this.currentDirection = 'down';
+      this.move('down', 0, 200);
+      isMoving = true;
     } else {
-      this.sprite.anims.stop();
+      sprite.anims.stop();  // Stop animation when no movement
     }
-
-    // Update the name text position above the hero’s head
-    this.nameText.setPosition(this.sprite.x, this.sprite.y - 20);
+  
+    // Only send data if position or movement state changes
+    if (isMoving !== this.wasMoving || this.positionChanged()) {
+      this.sendPositionUpdate(isMoving);
+    }
+  
+    this.nameText.setPosition(sprite.x, sprite.y - 20);
+    this.wasMoving = isMoving;  // Track movement state
   }
+  
+  // Helper method to handle movement and animation
+  move(direction, vx, vy) {
+    this.sprite.setVelocity(vx, vy);
+    this.sprite.anims.play(`walk-${direction}`, true);
+    this.currentDirection = direction;
+  }
+  
+  // Send position update to the server
+  sendPositionUpdate(isMoving) {
+    this.scene.socket.emit('updatePlayerPosition', {
+      playerName: this.nameText.text,
+      x: this.sprite.x,
+      y: this.sprite.y,
+      direction: this.currentDirection,
+      isMoving: isMoving,
+      roomCode: this.scene.roomCode,
+    });
+  }
+  
+  // Check if position has changed significantly
+  positionChanged() {
+    const dx = this.sprite.x - (this.lastX || 0);
+    const dy = this.sprite.y - (this.lastY || 0);
+    this.lastX = this.sprite.x;
+    this.lastY = this.sprite.y;
+    return Math.abs(dx) > 1 || Math.abs(dy) > 1;  // Update threshold
+  }
+  
+  
 
   // Handle attack input and animation
   handleAttack() {

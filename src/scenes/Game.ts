@@ -46,7 +46,7 @@ export default class Game extends Phaser.Scene {
     this.players.forEach((player, index) => {
       const spawnX = 500 + index * 50;
       const spawnY = 500;
-      const hero = new Hero(this, spawnX, spawnY, player.name || `Player${index + 1}`, player.id);
+      const hero = new Hero(this, spawnX, spawnY, player.name || `Player${index + 1}`, player.id,this.socket);
       this.heroes.push(hero);
 
       // Enable physics and collisions for each hero
@@ -76,40 +76,29 @@ export default class Game extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
     this.socket.on('updatePlayers', (updatedPlayers) => {
-      console.log("inside --------- ");
       updatedPlayers.forEach((playerData) => {
-        console.log("pos - 1");
-        if (playerData.id !== this.socketId) { // Don't update local player
+        if (playerData.id !== this.socketId) {  // Ignore local player
           const hero = this.heroes.find(h => h.socketId === playerData.id);
-          if (!hero) {
-            console.log(`Hero  swith ID ${playerData.id} not found!`);
-          }
+          
           if (hero) {
-            console.log(playerData.x, playerData.y);
             hero.sprite.setPosition(playerData.x, playerData.y);
-            hero.sprite.anims.play(`walk-${playerData.direction}`, true);
+            
+            if (playerData.isMoving) {
+              hero.sprite.anims.play(`walk-${playerData.direction}`, true);
+            } else {
+              hero.sprite.anims.stop();  // Stop animation when not moving
+              hero.sprite.setFrame(0);  // Optionally set to idle frame
+            }
           }
         }
       });
     });
-    
-
 
   }
 
   update() {
     if (this.localHero && this.cursors) {
       this.localHero.update(this.cursors);
-  
-      // Emit the local player's position to the server
-      const { x, y } = this.localHero.sprite;
-      this.socket.emit('updatePlayerPosition', { 
-        socketId: this.socketId, 
-        x, 
-        y,
-        direction: this.localHero.currentDirection,
-        roomCode : this.roomCode
-      });
     }
   }
   
