@@ -13,19 +13,18 @@ export default class Game extends Phaser.Scene {
   }
 
   init(data) {
-    const { playerName = 'Noobie', playerCount = 1, players = [], socketId = '',roomCode,socket } = data || {};
+    const { playerName = 'Noobie', playerCount = 1, players = [], socketId = '', roomCode, socket } = data || {};
     this.playerName = playerName;
     this.playerCount = playerCount;
     this.players = players;
     this.socketId = socketId;
-    this.roomCode = roomCode
-    this.socket = socket
+    this.roomCode = roomCode;
+    this.socket = socket;
   }
 
   async create() {
     const map = this.make.tilemap({ key: 'game_environment' });
 
-    // Load tilesets
     const dungeon_tileset = map.addTilesetImage('duneon', 'dungeon_tiles');
     const grass_tiles_tileset = map.addTilesetImage('grass_tiles', 'grass_tiles');
     const boundry_water_tiles = map.addTilesetImage('boundry_water_tiles','boundry_water_tiles');
@@ -46,20 +45,21 @@ export default class Game extends Phaser.Scene {
     this.players.forEach((player, index) => {
       const spawnX = 500 + index * 50;
       const spawnY = 500;
-      const hero = new Hero(this, spawnX, spawnY, player.name || `Player${index + 1}`, player.id,this.socket,this.players);
+      const hero = new Hero(this, spawnX, spawnY, player.name || `Player${index + 1}`, player.id, this.socket, this.players);
       this.heroes.push(hero);
 
       // Enable physics and collisions for each hero
       this.physics.add.collider(hero.sprite, boundaryLayer);
 
       // Enable keyboard input for the local player only
-      if (this.socketId === player.id) { // Correct comparison
+      if (this.socketId === player.id) {
         this.localHero = hero;  // Track the local player
         this.cursors = this.input.keyboard.addKeys({
           up: 'W',
           down: 'S',
           left: 'A',
-          right: 'D'
+          right: 'D',
+          attack: Phaser.Input.Keyboard.KeyCodes.SPACE  // Add attack key
         });
       }
     });
@@ -70,30 +70,44 @@ export default class Game extends Phaser.Scene {
     // Set the camera to follow the local player's hero
     this.cameras.main.startFollow(this.localHero.sprite, true, 0.1, 0.1);
     this.cameras.main.setZoom(2);
-
-    // Set camera and world bounds
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
+    // Listen for player updates
     this.socket.on('updatePlayers', (updatedPlayers) => {
       updatedPlayers.forEach((playerData) => {
-        if (playerData.id !== this.socketId) {  // Ignore local player
+        if (playerData.id !== this.socketId) {
           const hero = this.heroes.find(h => h.socketId === playerData.id);
-          
           if (hero) {
             hero.sprite.setPosition(playerData.x, playerData.y);
-            
-            if (playerData.isMoving) {
+            if (playerData.isAttacking) {
+              hero.sprite.anims.play('attack', true);  // Play attack animation
+            } else if (playerData.isMoving) {
               hero.sprite.anims.play(`walk-${playerData.direction}`, true);
             } else {
-              hero.sprite.anims.stop();  // Stop animation when not moving
-              hero.sprite.setFrame(0);  // Optionally set to idle frame
+              hero.sprite.anims.stop();
+              hero.sprite.setFrame(0);  // Idle frame
             }
           }
         }
       });
     });
 
+        // Listen for attack events from other players
+        this.socket.on('playerAttacked', (attackData) => {
+          const { socketId, x, y, direction, attackAnimationKey } = attackData;
+          console.log(`Received attack from player ${socketId} at (${x}, ${y}) in direction ${direction}`);
+    
+          // Find the hero who performed the attack
+          const attackingHero = this.heroes.find(h => h.socketId === socketId);
+          if (attackingHero) {
+            attackingHero.sprite.setPosition(x, y);  // Update position if necessary
+            attackingHero.sprite.anims.play(attackAnimationKey, true);  // Play attack animation
+          } else {
+            console.log(`Hero not found for player ${socketId}`);
+          }
+        });
+    
   }
 
   update() {
@@ -101,5 +115,4 @@ export default class Game extends Phaser.Scene {
       this.localHero.update(this.cursors);
     }
   }
-  
 }

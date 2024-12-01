@@ -31,12 +31,6 @@ export default class Hero {
         this.attack();
       });
     }
-
-    this.scene.socket.on("enemyAttack", (data) => {
-      if (data.socketId !== this.socketId) {  
-        this.playEnemyAttackAnimation(data);
-      }
-    });
   }
 
   // Create walk and attack animations for each direction
@@ -147,23 +141,6 @@ export default class Hero {
       this.isAttacking = false; // Allow new attacks after animation
       console.log("Attack animation complete");
     });
-  }
-
-  // Play the enemy attack animation on the existing sprite
-  playEnemyAttackAnimation(data) {
-    // Find the enemy using the 'id' field, which matches the socketId in the data
-    const enemy = this.players.find(player => player.id === data.socketId);
-    
-    console.log(enemy);
-    console.log("----------");
-    console.log(this.players);
-    
-    if (enemy) {
-      this.sprite.anims.play(data.attackAnimationKey);
-      console.log(`Enemy ${data.socketId} is attacking in ${data.direction} direction`);
-    } else {
-      console.log(`Enemy with socketId ${data.socketId} not found.`);
-    }
   }
   
   updateName(newName) {
