@@ -46,7 +46,7 @@ export default class Game extends Phaser.Scene {
     this.players.forEach((player, index) => {
       const spawnX = 500 + index * 50;
       const spawnY = 500;
-      const hero = new Hero(this, spawnX, spawnY, player.name || `Player${index + 1}`, player.id,this.socket);
+      const hero = new Hero(this, spawnX, spawnY, player.name || `Player${index + 1}`, player.id,this.socket,this.players);
       this.heroes.push(hero);
 
       // Enable physics and collisions for each hero

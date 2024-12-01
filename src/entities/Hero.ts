@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 
 export default class Hero {
-  constructor(scene, x, y, playerName = "Noobie", socketId, socket) {
+  constructor(scene, x, y, playerName = "Noobie", socketId, socket,players) {
     this.scene = scene;
     this.socketId = socketId; // Store the socketId for identifying the player
     this.sprite = scene.physics.add.sprite(x, y, "hero"); // Hero sprite
@@ -9,6 +9,7 @@ export default class Hero {
     this.sprite.setCollideWorldBounds(true);
     this.sprite.setDepth(2); // Ensure hero sprite is above trees
     this.socket = socket;
+    this.players = players;
     this.createAnimations();
     this.isAttacking = false;
     this.currentDirection = "down";
@@ -25,11 +26,17 @@ export default class Hero {
       .setDepth(3); // Set a higher depth for the name text
 
     // Handle attack on pointer down
-     if (this.scene.socketId === this.socketId) {
-      this.scene.input.on('pointerdown', () => {
+    if (this.scene.socketId === this.socketId) {
+      this.scene.input.on("pointerdown", () => {
         this.attack();
       });
     }
+
+    this.scene.socket.on("enemyAttack", (data) => {
+      if (data.socketId !== this.socketId) {  
+        this.playEnemyAttackAnimation(data);
+      }
+    });
   }
 
   // Create walk and attack animations for each direction
@@ -83,7 +90,7 @@ export default class Hero {
       this.move("down", 0, 200);
       isMoving = true;
     } else {
-      sprite.anims.stop(); 
+      sprite.anims.stop();
     }
     if (isMoving !== this.wasMoving || this.positionChanged()) {
       this.sendPositionUpdate(isMoving);
@@ -120,24 +127,46 @@ export default class Hero {
     return Math.abs(dx) > 1 || Math.abs(dy) > 1; // Update threshold
   }
 
-
   // Attack method to handle attack animations
   attack() {
-    this.isAttacking = true;  // Prevent additional attacks
-    this.sprite.setVelocity(0);  // Stop movement during attack
-    this.sprite.anims.play(`hero_attack-${this.currentDirection}`);  // Play attack animation
-  
+    this.isAttacking = true; // Prevent additional attacks
+    this.sprite.setVelocity(0); // Stop movement during attack
+    this.sprite.anims.play(`hero_attack-${this.currentDirection}`); // Play attack animation
+
+    this.scene.socket.emit("playerAttack", {
+      socketId: this.socketId,
+      x: this.sprite.x,
+      y: this.sprite.y,
+      direction: this.currentDirection,
+      attackAnimationKey: `hero_attack-${this.currentDirection}`,
+      roomCode: this.scene.roomCode,
+    });
+
     // Reset attack state after animation completes
-    this.sprite.once('animationcomplete', () => {
-      this.isAttacking = false;  // Allow new attacks after animation
-      console.log('Attack animation complete');
+    this.sprite.once("animationcomplete", () => {
+      this.isAttacking = false; // Allow new attacks after animation
+      console.log("Attack animation complete");
     });
   }
-  
 
-  // Method to update the player's name
+  // Play the enemy attack animation on the existing sprite
+  playEnemyAttackAnimation(data) {
+    // Find the enemy using the 'id' field, which matches the socketId in the data
+    const enemy = this.players.find(player => player.id === data.socketId);
+    
+    console.log(enemy);
+    console.log("----------");
+    console.log(this.players);
+    
+    if (enemy) {
+      this.sprite.anims.play(data.attackAnimationKey);
+      console.log(`Enemy ${data.socketId} is attacking in ${data.direction} direction`);
+    } else {
+      console.log(`Enemy with socketId ${data.socketId} not found.`);
+    }
+  }
+  
   updateName(newName) {
     this.nameText.setText(newName);
   }
-
 }
