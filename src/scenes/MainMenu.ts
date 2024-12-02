@@ -50,10 +50,8 @@ export default class MainMenu extends Phaser.Scene {
     }).setOrigin(0.5);
     menuContainer.add(titleText);
 
-    // Buttons for game modes
-    menuContainer.add(this.createButton('Single Player', 0, () => this.scene.start('Game')));
-    menuContainer.add(this.createButton('Multiplayer', 60, () => this.createRoom()));
-    menuContainer.add(this.createButton('Join Game', 120, () => this.joinRoom()));
+    menuContainer.add(this.createButton('Start Game', 0, () => this.createRoom()));
+    menuContainer.add(this.createButton('Join Game', 60, () => this.joinRoom()));
 
     // Listen for room state updates
     this.socket.on('updateRoomState', (roomCode: string, playerCount: number, playerNames: string[], hostId: string) => {

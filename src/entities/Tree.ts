@@ -32,12 +32,16 @@ export default class Tree {
           tree.destroy();
           tree.healthBarBackground.destroy();
           tree.healthBar.destroy();
-          EventBus.emit("updateHeroHealth", 20,this.socketId,this.socket,this.roomCode)
           toast.success(`+20 Health`, {
             position: 'top-center',
             autoClose: 1000,
+            closeOnClick:false,
+            closeButton:false,
+            draggable:false,
             hideProgressBar: true,
           });
+          
+          EventBus.emit("updateHeroHealth", 20,this.socketId,this.socket,this.roomCode)
           
         }
       }
