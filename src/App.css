@@ -43,6 +43,7 @@ body {
   width: 33%;
 }
 
+
 .health-bar {
   display: flex;
   align-items: center;
@@ -55,11 +56,17 @@ body {
   white-space: nowrap;
 }
 
-.health-fill {
+.health-background {
   flex: 1;
   height: 15px;
-  background-color: rgb(58, 152, 34); /* Green health bar */
+  background-color: #444; /* Gray background for full health */
   border-radius: 10px;
+  overflow: hidden; /* Make sure the green bar doesn't exceed the bounds */
+}
+
+.health-fill {
+  height: 100%;
+  background-color: rgb(58, 152, 34); /* Green health bar */
   transition: width 0.3s ease;
 }
 

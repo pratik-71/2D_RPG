@@ -1,17 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
-import Phaser from 'phaser';
-import Preloader from '../scenes/Preloader';
-import MainMenu from '../scenes/MainMenu';
-import Game from '../scenes/Game';
-import { ToastContainer, toast } from 'react-toastify'; // Importing Toastify
-import 'react-toastify/dist/ReactToastify.css'; // Importing Toastify CSS
-import '../App.css';
+import React, { useEffect, useRef, useState } from "react";
+import Phaser from "phaser";
+import Preloader from "../scenes/Preloader";
+import MainMenu from "../scenes/MainMenu";
+import Game from "../scenes/Game";
+import { ToastContainer, toast } from "react-toastify"; // Importing Toastify
+import "react-toastify/dist/ReactToastify.css"; // Importing Toastify CSS
+import "../App.css";
 
 const GameCanvas: React.FC = () => {
   const phaserGame = useRef<Phaser.Game | null>(null);
 
   // State for health tracking
-  const [heroHealth, setHeroHealth] = useState(100);
+  const [heroHealth, setHeroHealth] = useState(20);
   const [castleHealth, setCastleHealth] = useState(100);
 
   // State for players and enemies count
@@ -19,11 +19,10 @@ const GameCanvas: React.FC = () => {
   const [enemiesCount, setEnemiesCount] = useState(10);
 
   // State for messages
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
   // Example of triggering a disconnection toast
-  const handleDisconnection = () => {
-  };
+  const handleDisconnection = () => {};
 
   useEffect(() => {
     if (!phaserGame.current) {
@@ -31,20 +30,20 @@ const GameCanvas: React.FC = () => {
         type: Phaser.AUTO,
         scale: {
           mode: Phaser.Scale.RESIZE,
-          parent: 'phaser-container',
+          parent: "phaser-container",
           autoCenter: Phaser.Scale.CENTER_BOTH,
         },
         physics: {
-          default: 'arcade',
+          default: "arcade",
           arcade: { gravity: { y: 0 } },
         },
         dom: {
           createContainer: true,
         },
-        scene: [Preloader, MainMenu, Game], 
-        input:{
-          keyboard:true
-        }
+        scene: [Preloader, MainMenu, Game],
+        input: {
+          keyboard: true,
+        },
       });
     }
 
@@ -58,8 +57,8 @@ const GameCanvas: React.FC = () => {
   }, []);
 
   const handleSendMessage = () => {
-    console.log('Message sent:', message);
-    setMessage('');
+    console.log("Message sent:", message);
+    setMessage("");
   };
 
   return (
@@ -71,12 +70,22 @@ const GameCanvas: React.FC = () => {
         <div className="first-column">
           <div className="health-bar">
             <h3>Hero Health</h3>
-            <div className="health-fill" style={{ width: `${heroHealth}%` }}></div>
+            <div className="health-background">
+              <div
+                className="health-fill"
+                style={{ width: `${heroHealth}%` }}
+              ></div>
+            </div>
           </div>
 
           <div className="health-bar">
             <h3>Castle Health</h3>
-            <div className="health-fill" style={{ width: `${castleHealth}%` }}></div>
+            <div className="health-background">
+              <div
+                className="health-fill"
+                style={{ width: `${castleHealth}%` }}
+              ></div>
+            </div>
           </div>
         </div>
 

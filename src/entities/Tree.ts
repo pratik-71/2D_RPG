@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 
 import Phaser from 'phaser';
+import { toast } from 'react-toastify';
 
 export default class Tree {
   constructor(scene, map, socket,roomCode) {
@@ -14,14 +15,10 @@ export default class Tree {
     // Listen for updated tree health from the backend
     this.socket.on("updateTreeHealth", (data) => {
       const { treeId, health } = data;
-      const tree = this.treeGroup.getChildren().find(t => t.id === treeId);
-    
+      const tree = this.treeGroup.getChildren().find(t => t.id === treeId);  
       console.log("pos-1");
-    
       if (tree) {
         console.log("pos-2");
-    
-        // Update tree health
         tree.health = health;
         this.updateHealthBar(tree); 
         tree.healthBarBackground.setAlpha(1);
@@ -35,6 +32,11 @@ export default class Tree {
           tree.destroy();
           tree.healthBarBackground.destroy();
           tree.healthBar.destroy();
+          toast.success(`+20 Health`, {
+            position: 'top-center',
+            autoClose: 1000,
+            hideProgressBar: true,
+          });
         }
       }
     });

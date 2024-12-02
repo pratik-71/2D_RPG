@@ -1,13 +1,13 @@
 import Phaser from "phaser";
 
 export default class Hero {
-  constructor(scene, x, y, playerName = "Noobie", socketId, socket,players) {
+  constructor(scene, x, y, playerName = "Noobie", socketId, socket, players) {
     this.scene = scene;
-    this.socketId = socketId; // Store the socketId for identifying the player
-    this.sprite = scene.physics.add.sprite(x, y, "hero"); // Hero sprite
-    this.sprite.body.setSize(1, 1); // Adjusted size
+    this.socketId = socketId;
+    this.sprite = scene.physics.add.sprite(x, y, "hero"); 
+    this.sprite.body.setSize(1, 1); 
     this.sprite.setCollideWorldBounds(true);
-    this.sprite.setDepth(2); // Ensure hero sprite is above trees
+    this.sprite.setDepth(2); 
     this.socket = socket;
     this.players = players;
     this.createAnimations();
@@ -23,7 +23,7 @@ export default class Hero {
         align: "center",
       })
       .setOrigin(0.5, 0.5)
-      .setDepth(3); // Set a higher depth for the name text
+      .setDepth(3); 
 
     // Handle attack on pointer down
     if (this.scene.socketId === this.socketId) {
@@ -54,10 +54,10 @@ export default class Hero {
         key: `hero_attack-${dir}`,
         frames: this.scene.anims.generateFrameNumbers("hero_attack", {
           start: frameStarts[index],
-          end: frameStarts[index] + 7, // Adjust end frame to match the attack animation
+          end: frameStarts[index] + 7, 
         }),
         frameRate: 15,
-        repeat: 0, // Ensure the attack animation doesn't loop
+        repeat: 0, 
       });
     });
 
@@ -142,8 +142,9 @@ export default class Hero {
       console.log("Attack animation complete");
     });
   }
-  
+
+  // Method to update the player's name
   updateName(newName) {
-    this.nameText.setText(newName);
+    this.nameText.setText(newName); 
   }
 }

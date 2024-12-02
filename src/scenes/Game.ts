@@ -80,6 +80,7 @@ export default class Game extends Phaser.Scene {
           const hero = this.heroes.find(h => h.socketId === playerData.id);
           if (hero) {
             hero.sprite.setPosition(playerData.x, playerData.y);
+            hero.nameText.setPosition(playerData.x, playerData.y - 20);
             if (playerData.isAttacking) {
               hero.sprite.anims.play('attack', true);  // Play attack animation
             } else if (playerData.isMoving) {
