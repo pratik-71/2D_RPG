@@ -1,7 +1,8 @@
 import Phaser from "phaser";
 
 export default class Hero {
-  constructor(scene, x, y, playerName = "Noobie", socketId, socket, players) {
+  constructor(scene, x, y, playerName, socketId, socket, players) {
+    this.playerName = playerName
     this.scene = scene;
     this.socketId = socketId;
     this.sprite = scene.physics.add.sprite(x, y, "hero"); 
@@ -62,7 +63,7 @@ export default class Hero {
       });
     });
 
-    console.log("Attack animations created");
+
   }
 
   // Update method to control movement and animations
@@ -140,7 +141,6 @@ export default class Hero {
     // Reset attack state after animation completes
     this.sprite.once("animationcomplete", () => {
       this.isAttacking = false; // Allow new attacks after animation
-      console.log("Attack animation complete");
     });
   }
 

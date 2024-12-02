@@ -69,6 +69,7 @@ export default class MainMenu extends Phaser.Scene {
 
     this.socket.on('gameStarted', (roomCode:string,playerCount:integer,players:Array) => {
       this.scene.start('Game', { playerName:this.playerName,playerCount:playerCount,players:players,socketId:this.socket.id,roomCode:roomCode,socket:this.socket }); 
+      this.closeMultiplayerWindow()
     });
 
     this.socket.on('closeMultiplayerWindow',()=>{

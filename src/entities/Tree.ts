@@ -5,21 +5,20 @@ import { toast } from 'react-toastify';
 import EventBus from '../EventBus';
 
 export default class Tree {
-  constructor(scene, map, socket,roomCode) {
+  constructor(scene, map, socket,roomCode,socketId) {
     this.scene = scene;
     this.map = map;
     this.socket = socket;  // Socket connection passed to the class
     this.treeIdCounter = 1; // Counter to generate unique tree IDs
     this.roomCode = roomCode
+    this.socketId = socketId
     this.initTrees();
 
     // Listen for updated tree health from the backend
     this.socket.on("updateTreeHealth", (data) => {
       const { treeId, health } = data;
       const tree = this.treeGroup.getChildren().find(t => t.id === treeId);  
-      console.log("pos-1");
       if (tree) {
-        console.log("pos-2");
         tree.health = health;
         this.updateHealthBar(tree); 
         tree.healthBarBackground.setAlpha(1);
@@ -33,7 +32,7 @@ export default class Tree {
           tree.destroy();
           tree.healthBarBackground.destroy();
           tree.healthBar.destroy();
-          EventBus.emit("updateHeroHealth", 20)
+          EventBus.emit("updateHeroHealth", 20,this.socketId,this.socket,this.roomCode)
           toast.success(`+20 Health`, {
             position: 'top-center',
             autoClose: 1000,
@@ -64,8 +63,6 @@ export default class Tree {
 
       // Assign unique ID to each tree
       tree.id = treeId;
-
-      console.log(`Tree ID: ${tree.id}`);
 
       tree.body.setSize(treeObject.width - 20, treeObject.height - 12);
       tree.setOrigin(0.5, 0.5);

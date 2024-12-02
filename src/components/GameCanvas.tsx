@@ -22,9 +22,12 @@ const GameCanvas: React.FC = () => {
   // State for messages
   const [message, setMessage] = useState("");
 
-  const updateHeroHealth = (healthIncrease: number) => {
-    console.log("Health update request received");
-    setHeroHealth((prevHealth) => Math.min(prevHealth + healthIncrease, 100)); // Use previous state to update health
+  const updateHeroHealth = (healthIncrease: number, socketId: string, socket: any,roomCode:integer) => {
+      setHeroHealth((prevHealth) => Math.min(prevHealth + healthIncrease, 100));
+      if (updatedHealth <= 0) {
+        socket.emit("updatePlayerIsDead", { socketId, isDead: true,roomCode });
+      }
+      return updatedHealth;
   };
 
   useEffect(() => {
@@ -73,7 +76,7 @@ const GameCanvas: React.FC = () => {
       <div className="data-panel">
         <div className="first-column">
           <div className="health-bar">
-            <h3>Hero Health</h3>
+            <h3>Hero's Health</h3>
             <div className="health-background">
               <div
                 className="health-fill"

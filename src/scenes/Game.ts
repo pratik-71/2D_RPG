@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import Castle from '../entities/Castle';
 import Hero from '../entities/Hero';
 import Tree from '../entities/Tree';
+import { toast } from 'react-toastify';
 
 
 export default class Game extends Phaser.Scene {
@@ -65,7 +66,7 @@ export default class Game extends Phaser.Scene {
     });
 
     this.castle = new Castle(this, map);
-    this.treeManager = new Tree(this, map,this.socket,this.roomCode);
+    this.treeManager = new Tree(this, map,this.socket,this.roomCode,this.socketId);
 
     // Set the camera to follow the local player's hero
     this.cameras.main.startFollow(this.localHero.sprite, true, 0.1, 0.1);
@@ -108,6 +109,38 @@ export default class Game extends Phaser.Scene {
             console.log(`Hero not found for player ${socketId}`);
           }
     });
+
+      // Listen for the updatePlayerIsDead event
+      this.socket.on('PlayerIsDead', (playerData) => {
+        const { id, isDead } = playerData;  // Destructure the player data
+        if(id==this.socketId){
+          toast.warning(`You are dead!`, {
+            position: 'top-center',
+            autoClose: 1000,
+            hideProgressBar: true,
+            closeOnClick: false,
+            closeButton: false
+          });
+          this.scene.start('MainMenu')
+        }else{
+          const hero = this.heroes.find(h => h.socketId == id);  // Find the hero by socketId
+        console.log(hero);  
+        if (hero && isDead) {
+          toast.warning(`${hero.playerName} is dead!`, {
+            position: 'top-center',
+            autoClose: 1000,
+            hideProgressBar: true,
+            closeOnClick: false,
+            closeButton: false
+          });
+          if (hero.sprite) {
+            hero.sprite.setVisible(false);  
+          }
+          this.heroes = this.heroes.filter(h => h.socketId != id);
+        }
+        }
+      });
+      
     
   }
 
