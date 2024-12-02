@@ -13,6 +13,7 @@ export default class Hero {
     this.createAnimations();
     this.isAttacking = false;
     this.currentDirection = "down";
+    this.health=100;
 
     // Add a text object for displaying the player's name
     this.nameText = this.scene.add

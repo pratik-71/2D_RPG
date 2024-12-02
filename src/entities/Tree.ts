@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 
 import Phaser from 'phaser';
 import { toast } from 'react-toastify';
+import EventBus from '../EventBus';
 
 export default class Tree {
   constructor(scene, map, socket,roomCode) {
@@ -32,11 +33,13 @@ export default class Tree {
           tree.destroy();
           tree.healthBarBackground.destroy();
           tree.healthBar.destroy();
+          EventBus.emit("updateHeroHealth", 20)
           toast.success(`+20 Health`, {
             position: 'top-center',
             autoClose: 1000,
             hideProgressBar: true,
           });
+          
         }
       }
     });

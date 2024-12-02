@@ -6,6 +6,7 @@ import Game from "../scenes/Game";
 import { ToastContainer, toast } from "react-toastify"; // Importing Toastify
 import "react-toastify/dist/ReactToastify.css"; // Importing Toastify CSS
 import "../App.css";
+import EventBus from "../EventBus";
 
 const GameCanvas: React.FC = () => {
   const phaserGame = useRef<Phaser.Game | null>(null);
@@ -21,8 +22,10 @@ const GameCanvas: React.FC = () => {
   // State for messages
   const [message, setMessage] = useState("");
 
-  // Example of triggering a disconnection toast
-  const handleDisconnection = () => {};
+  const updateHeroHealth = (healthIncrease: number) => {
+    console.log("Health update request received");
+    setHeroHealth((prevHealth) => Math.min(prevHealth + healthIncrease, 100)); // Use previous state to update health
+  };
 
   useEffect(() => {
     if (!phaserGame.current) {
@@ -47,10 +50,11 @@ const GameCanvas: React.FC = () => {
       });
     }
 
-    // Simulate a disconnection event after 5 seconds for testing
-    setTimeout(handleDisconnection, 5000);
+    // Register event listener to update hero health
+    EventBus.on("updateHeroHealth", updateHeroHealth);
 
     return () => {
+      EventBus.off("updateHeroHealth", updateHeroHealth);
       phaserGame.current?.destroy(true);
       phaserGame.current = null;
     };
