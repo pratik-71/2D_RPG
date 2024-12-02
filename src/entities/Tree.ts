@@ -47,6 +47,20 @@ export default class Tree {
       }
     });
     
+    this.socket.on("updateTreeSprites", (data) => {
+      console.log("messege recievd")
+      data.forEach(({ id, health }) => {
+        const tree = this.treeGroup.getChildren().find(t => t.id === id);
+        if (health <= 0) {
+          console.log(`Destroying tree: ${id}`);  
+          tree.attackSensor.destroy();
+          tree.destroy();
+          tree.healthBarBackground.destroy();
+          tree.healthBar.destroy();
+        }
+      });
+    });
+
   }
 
   initTrees() {
@@ -129,6 +143,8 @@ export default class Tree {
         );
       });
     });
+
+    this.socket.emit('updateTreesOnStart',this.roomCode)
   }
 
   // Method to update the health bar
