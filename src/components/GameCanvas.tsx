@@ -3,31 +3,49 @@ import Phaser from "phaser";
 import Preloader from "../scenes/Preloader";
 import MainMenu from "../scenes/MainMenu";
 import Game from "../scenes/Game";
-import { ToastContainer, toast } from "react-toastify"; // Importing Toastify
-import "react-toastify/dist/ReactToastify.css"; // Importing Toastify CSS
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "../App.css";
 import EventBus from "../EventBus";
 
 const GameCanvas: React.FC = () => {
   const phaserGame = useRef<Phaser.Game | null>(null);
 
-  // State for health tracking
   const [heroHealth, setHeroHealth] = useState(20);
   const [castleHealth, setCastleHealth] = useState(100);
 
-  // State for players and enemies count
   const [playersCount, setPlayersCount] = useState(1);
   const [enemiesCount, setEnemiesCount] = useState(10);
 
   // State for messages
   const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<{ text: string, sender: string, socketId: string }[]>([]);
+  const [localSocketId, setLocalSocketId] = useState<string>("");
 
-  const updateHeroHealth = (healthIncrease: number, socketId: string, socket: any,roomCode:integer) => {
-      setHeroHealth((prevHealth) => Math.min(prevHealth + healthIncrease, 100));
-      if (updatedHealth <= 0) {
-        socket.emit("updatePlayerIsDead", { socketId, isDead: true,roomCode });
-      }
-      return updatedHealth;
+
+  const updateHeroHealth = (healthIncrease: number, socketId: string, socket: any, roomCode: string) => {
+    setHeroHealth((prevHealth) => Math.min(prevHealth + healthIncrease, 100));
+    if (updatedHealth <= 0) {
+      socket.emit("updatePlayerIsDead", { socketId, isDead: true, roomCode });
+    }
+    return updatedHealth;
+  };
+
+  const handleShowMessages = (data, localId) => {
+    console.log(data); // For debugging
+    const { message, playerName, socketId } = data;
+    setLocalSocketId(localId);
+    const newMessage = {
+      text: message,
+      sender: playerName,
+      socketId: socketId,
+    };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+  };
+  
+
+  const handleSendMessage = () => {
+      EventBus.emit("handleSendMessages",message)
   };
 
   useEffect(() => {
@@ -52,21 +70,16 @@ const GameCanvas: React.FC = () => {
         },
       });
     }
-
-    // Register event listener to update hero health
     EventBus.on("updateHeroHealth", updateHeroHealth);
+    EventBus.on("ShowMessages", handleShowMessages);
 
     return () => {
       EventBus.off("updateHeroHealth", updateHeroHealth);
+      EventBus.off("ShowMessages",handleShowMessages);
       phaserGame.current?.destroy(true);
       phaserGame.current = null;
     };
   }, []);
-
-  const handleSendMessage = () => {
-    console.log("Message sent:", message);
-    setMessage("");
-  };
 
   return (
     <div className="game-container">
@@ -74,32 +87,40 @@ const GameCanvas: React.FC = () => {
 
       {/* Data Panel */}
       <div className="data-panel">
+        {/* Health and Players Info */}
         <div className="first-column">
+          {/* Hero's Health */}
           <div className="health-bar">
             <h3>Hero's Health</h3>
             <div className="health-background">
-              <div
-                className="health-fill"
-                style={{ width: `${heroHealth}%` }}
-              ></div>
+              <div className="health-fill" style={{ width: `${heroHealth}%` }}></div>
             </div>
           </div>
-
+          {/* Castle Health */}
           <div className="health-bar">
             <h3>Castle Health</h3>
             <div className="health-background">
-              <div
-                className="health-fill"
-                style={{ width: `${castleHealth}%` }}
-              ></div>
+              <div className="health-fill" style={{ width: `${castleHealth}%` }}></div>
             </div>
           </div>
         </div>
 
-        <div className="second-column">
-          <h6>Number of Players: {playersCount}</h6>
-          <h6>Number of Enemies: {enemiesCount}</h6>
-        </div>
+        {/* Chat Section */}
+        <div className="chat-container">
+  <div className="chat-messages">
+    {messages.map((msg, index) => (
+      <div
+        key={index}
+        className={`message ${msg.socketId === localSocketId ? "left" : "right"}`}
+      >
+        <span className="message-sender">{msg.sender}:</span>
+        <span className="message-text">{msg.text}</span>
+      </div>
+    ))}
+  </div>
+</div>
+
+
 
         <div className="third-column">
           <input

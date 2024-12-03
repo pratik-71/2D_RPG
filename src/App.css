@@ -175,3 +175,79 @@ button {
   padding: 2px 2px !important; /* Adjust padding */
   border-radius: 5px !important; /* Optional: to round corners */
 }
+
+
+
+/* Chat container at the bottom right */
+.chat-container {
+  position: absolute;
+  bottom: 70px; /* Adjust as needed */
+  right: 5px; /* Adjust as needed */
+  width: 300px; /* Adjust width based on your layout */
+  height: 30vh; /* Fixed height as per requirement */
+  background-color: rgba(0, 0, 0, 0.5); /* Transparent dark background */
+  border-radius: 10px; /* Rounded corners */
+  overflow-y: auto; /* Enable scrolling if messages exceed container height */
+  padding: 10px;
+  display: flex;
+  flex-direction: column-reverse; /* Newest message at bottom */
+  color: white; /* Text color for visibility */
+}
+
+/* Message styling */
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Spacing between messages */
+}
+
+.message {
+  width: auto;
+  padding: 8px 12px;
+  border-radius: 12px;
+  word-wrap: break-word; /* Prevent overflow */
+}
+
+/* Messages from the current user (left side, green background) */
+.message.left {
+  align-self: flex-end;
+  text-align: right;
+  background-color: #28a745; /* Green background for your messages */
+  margin-left: 10px;
+  padding: 5px;
+  border-radius: 10px;
+  color: white;
+}
+
+/* Messages from others (right side, blue background) */
+.message.right {
+  align-self: flex-start;
+  text-align: left;
+  background-color: #007bff; /* Blue background for others' messages */
+  margin-right: 10px;
+  padding: 5px;
+  border-radius: 10px;
+  color: white;
+}
+
+.message-sender {
+  font-weight: bold;
+}
+
+.message-text {
+  font-size: 14px;
+}
+
+/* Scrollbar customization (optional) */
+.chat-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}

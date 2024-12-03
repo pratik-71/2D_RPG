@@ -3,6 +3,7 @@ import Castle from "../entities/Castle";
 import Hero from "../entities/Hero";
 import Tree from "../entities/Tree";
 import { toast } from "react-toastify";
+import EventBus from "../EventBus";
 
 export default class Game extends Phaser.Scene {
   socket: any;
@@ -27,6 +28,8 @@ export default class Game extends Phaser.Scene {
     this.socketId = socketId;
     this.roomCode = roomCode;
     this.socket = socket;
+
+    EventBus.on("handleSendMessages", this.handleSendMessage.bind(this));
   }
 
   addNewPlayerToGame(id, name, x, y, health) {
@@ -82,6 +85,10 @@ export default class Game extends Phaser.Scene {
     const boundaryLayer = map.createLayer("boundry", dungeon_tileset, 0, 0);
     boundaryLayer.setCollisionByExclusion([-1]);
 
+    
+    this.castle = new Castle(this, map);
+
+
     // Create heroes for all players
     this.players.forEach((player, index) => {
       const spawnX = 500 + index * 50;
@@ -99,7 +106,7 @@ export default class Game extends Phaser.Scene {
 
       // Enable physics and collisions for each hero
       this.physics.add.collider(hero.sprite, boundaryLayer);
-
+      this.physics.add.collider(hero.sprite, this.castle.castle);
       // Enable keyboard input for the local player only
       if (this.socketId === player.id) {
         this.localHero = hero; // Track the local player
@@ -113,7 +120,6 @@ export default class Game extends Phaser.Scene {
       }
     });
 
-    this.castle = new Castle(this, map);
     this.treeManager = new Tree(
       this,
       map,
@@ -201,6 +207,23 @@ export default class Game extends Phaser.Scene {
       const { id, name, x, y, health } = newPlayerData;
       this.addNewPlayerToGame(id, name, x, y, health);
     });
+
+    this.socket.on('receiveMessage', (data) => {
+     EventBus.emit("ShowMessages",data,this.socketId)
+    });
+  }
+
+  handleSendMessage(message) {
+    if (this.socket && message.trim()) {
+      const data = {
+        message,
+        playerName: this.playerName,
+        roomCode: this.roomCode,
+        socketId: this.socketId,
+      };
+      // Send the message to the server
+      this.socket.emit("sendMessage", data,this.socketId);
+    }
   }
 
   update() {
