@@ -16,14 +16,22 @@ const GameCanvas: React.FC = () => {
 
   const [playersCount, setPlayersCount] = useState(1);
   const [enemiesCount, setEnemiesCount] = useState(10);
+  const [showChat, setShowChat] = useState(false);
+  const chatTimeout = useRef(null);
 
   // State for messages
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<{ text: string, sender: string, socketId: string }[]>([]);
+  const [messages, setMessages] = useState<
+    { text: string; sender: string; socketId: string }[]
+  >([]);
   const [localSocketId, setLocalSocketId] = useState<string>("");
 
-
-  const updateHeroHealth = (healthIncrease: number, socketId: string, socket: any, roomCode: string) => {
+  const updateHeroHealth = (
+    healthIncrease: number,
+    socketId: string,
+    socket: any,
+    roomCode: string
+  ) => {
     setHeroHealth((prevHealth) => Math.min(prevHealth + healthIncrease, 100));
     if (updatedHealth <= 0) {
       socket.emit("updatePlayerIsDead", { socketId, isDead: true, roomCode });
@@ -41,11 +49,20 @@ const GameCanvas: React.FC = () => {
       socketId: socketId,
     };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
+    showChatForLimitedTime();
   };
-  
 
   const handleSendMessage = () => {
-      EventBus.emit("handleSendMessages",message)
+    EventBus.emit("handleSendMessages", message);
+    showChatForLimitedTime();
+  };
+
+  const showChatForLimitedTime = () => {
+    setShowChat(true); // Show the chat container
+    if (chatTimeout.current) clearTimeout(chatTimeout.current); // Reset timer if active
+    chatTimeout.current = setTimeout(() => {
+      setShowChat(false); // Hide after 5 seconds of inactivity
+    }, 5000);
   };
 
   useEffect(() => {
@@ -75,7 +92,7 @@ const GameCanvas: React.FC = () => {
 
     return () => {
       EventBus.off("updateHeroHealth", updateHeroHealth);
-      EventBus.off("ShowMessages",handleShowMessages);
+      EventBus.off("ShowMessages", handleShowMessages);
       phaserGame.current?.destroy(true);
       phaserGame.current = null;
     };
@@ -93,34 +110,42 @@ const GameCanvas: React.FC = () => {
           <div className="health-bar">
             <h3>Hero's Health</h3>
             <div className="health-background">
-              <div className="health-fill" style={{ width: `${heroHealth}%` }}></div>
+              <div
+                className="health-fill"
+                style={{ width: `${heroHealth}%` }}
+              ></div>
             </div>
           </div>
           {/* Castle Health */}
           <div className="health-bar">
             <h3>Castle Health</h3>
             <div className="health-background">
-              <div className="health-fill" style={{ width: `${castleHealth}%` }}></div>
+              <div
+                className="health-fill"
+                style={{ width: `${castleHealth}%` }}
+              ></div>
             </div>
           </div>
         </div>
 
         {/* Chat Section */}
-        <div className="chat-container">
-  <div className="chat-messages">
-    {messages.map((msg, index) => (
-      <div
-        key={index}
-        className={`message ${msg.socketId === localSocketId ? "left" : "right"}`}
-      >
-        <span className="message-sender">{msg.sender}:</span>
-        <span className="message-text">{msg.text}</span>
-      </div>
-    ))}
-  </div>
-</div>
-
-
+        {showChat && (
+          <div className="chat-container">
+            <div className="chat-messages">
+              {messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`message ${
+                    msg.socketId === localSocketId ? "left" : "right"
+                  }`}
+                >
+                  <span className="message-sender">{msg.sender}:</span>
+                  <span className="message-text">{msg.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="third-column">
           <input
@@ -128,6 +153,7 @@ const GameCanvas: React.FC = () => {
             className="message-input"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            onClick={()=>{setShowChat(true)}}
             placeholder="Enter your message"
           />
           <button className="send-button" onClick={handleSendMessage}>
