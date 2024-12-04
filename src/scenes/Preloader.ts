@@ -9,7 +9,8 @@ export default class Preloader extends Phaser.Scene {
     // Load assets needed for the game
     this.load.spritesheet('hero', 'tiles/Sword_Run_full.png', { frameWidth: 64, frameHeight: 64 });
     this.load.spritesheet('hero_attack', 'tiles/Sword_attack_full.png', { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('zombie', 'tiles/Zombie_Run_full.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('zombie_run', 'tiles/Zombie_Run_full.png', { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('zombie_attack', 'tiles/Zombie_attack_full.png', { frameWidth: 64, frameHeight: 64 });
 
     this.load.image('dungeon_tiles', 'tiles/dungeon_tiles.png');
     this.load.image('enemy_spawn_tiles', 'tiles/enemy_spawn_tiles.png');

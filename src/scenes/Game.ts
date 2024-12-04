@@ -4,6 +4,7 @@ import Hero from "../entities/Hero";
 import Tree from "../entities/Tree";
 import { toast } from "react-toastify";
 import EventBus from "../EventBus";
+import Zombie from "../entities/Zombie";
 
 export default class Game extends Phaser.Scene {
   socket: any;
@@ -11,6 +12,7 @@ export default class Game extends Phaser.Scene {
   constructor() {
     super("Game");
     this.heroes = []; // Initialize heroes array
+    this.zombiesGroup = null;
   }
 
   init(data) {
@@ -85,9 +87,7 @@ export default class Game extends Phaser.Scene {
     const boundaryLayer = map.createLayer("boundry", dungeon_tileset, 0, 0);
     boundaryLayer.setCollisionByExclusion([-1]);
 
-    
     this.castle = new Castle(this, map);
-
 
     // Create heroes for all players
     this.players.forEach((player, index) => {
@@ -127,6 +127,16 @@ export default class Game extends Phaser.Scene {
       this.roomCode,
       this.socketId
     );
+
+    this.zombie = new Zombie(
+      this,
+      map,
+      this.socket,
+      this.socketId,
+      this.roomCode
+    );
+    this.zombiesGroup = this.physics.add.group();
+    
 
     // Set the camera to follow the local player's hero
     this.cameras.main.startFollow(this.localHero.sprite, true, 0.1, 0.1);
@@ -208,9 +218,19 @@ export default class Game extends Phaser.Scene {
       this.addNewPlayerToGame(id, name, x, y, health);
     });
 
-    this.socket.on('receiveMessage', (data) => {
-     EventBus.emit("ShowMessages",data,this.socketId)
+    this.socket.on("receiveMessage", (data) => {
+      EventBus.emit("ShowMessages", data, this.socketId);
     });
+
+    // In Game.js (or Game.ts)
+    this.socket.on("spawnEnemy", (zombieData) => {
+      const { x, y } = zombieData; // Spawn position
+      const zombie = new Zombie(this, x, y, this.castle.x, this.castle.y); 
+      this.zombiesGroup.add(zombie.sprite);
+      zombie.sprite.setScale(0.6);
+      zombie.sprite.setData('instance', zombie); 
+    });
+
   }
 
   handleSendMessage(message) {
@@ -222,7 +242,7 @@ export default class Game extends Phaser.Scene {
         socketId: this.socketId,
       };
       // Send the message to the server
-      this.socket.emit("sendMessage", data,this.socketId);
+      this.socket.emit("sendMessage", data, this.socketId);
     }
   }
 
@@ -230,5 +250,7 @@ export default class Game extends Phaser.Scene {
     if (this.localHero && this.cursors) {
       this.localHero.update(this.cursors);
     }
+
+
   }
 }
