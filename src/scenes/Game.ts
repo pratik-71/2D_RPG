@@ -13,6 +13,7 @@ export default class Game extends Phaser.Scene {
     super("Game");
     this.heroes = []; // Initialize heroes array
     this.zombiesGroup = null;
+    this.zombies = [];
   }
 
   init(data) {
@@ -87,7 +88,7 @@ export default class Game extends Phaser.Scene {
     const boundaryLayer = map.createLayer("boundry", dungeon_tileset, 0, 0);
     boundaryLayer.setCollisionByExclusion([-1]);
 
-    this.castle = new Castle(this, map);
+    this.castle = new Castle(this, map, this.socket,this.roomCode);
 
     // Create heroes for all players
     this.players.forEach((player, index) => {
@@ -136,7 +137,6 @@ export default class Game extends Phaser.Scene {
       this.roomCode
     );
     this.zombiesGroup = this.physics.add.group();
-    
 
     // Set the camera to follow the local player's hero
     this.cameras.main.startFollow(this.localHero.sprite, true, 0.1, 0.1);
@@ -168,18 +168,13 @@ export default class Game extends Phaser.Scene {
     // Listen for attack events from other players
     this.socket.on("playerAttacked", (attackData) => {
       const { socketId, x, y, direction, attackAnimationKey } = attackData;
-      console.log(
-        `Received attack from player ${socketId} at (${x}, ${y}) in direction ${direction}`
-      );
 
       // Find the hero who performed the attack
       const attackingHero = this.heroes.find((h) => h.socketId === socketId);
       if (attackingHero) {
         attackingHero.sprite.setPosition(x, y); // Update position if necessary
         attackingHero.sprite.anims.play(attackAnimationKey, true); // Play attack animation
-      } else {
-        console.log(`Hero not found for player ${socketId}`);
-      }
+      } 
     });
 
     // Listen for the updatePlayerIsDead event
@@ -196,7 +191,6 @@ export default class Game extends Phaser.Scene {
         this.scene.start("MainMenu");
       } else {
         const hero = this.heroes.find((h) => h.socketId == id); // Find the hero by socketId
-        console.log(hero);
         if (hero && isDead) {
           toast.warning(`${hero.playerName} is dead!`, {
             position: "top-center",
@@ -224,13 +218,15 @@ export default class Game extends Phaser.Scene {
 
     // In Game.js (or Game.ts)
     this.socket.on("spawnEnemy", (zombieData) => {
-      const { x, y } = zombieData; // Spawn position
-      const zombie = new Zombie(this, x, y, this.castle.x, this.castle.y); 
+      const { x, y } = zombieData;
+      if(this.castle.isCastleInitialized){
+        const zombie = new Zombie(this, x, y, this.castle);
       this.zombiesGroup.add(zombie.sprite);
+      this.zombies.push(zombie); // Track zombies for updates
       zombie.sprite.setScale(0.6);
-      zombie.sprite.setData('instance', zombie); 
+      zombie.sprite.setData('instance', zombie);
+      }
     });
-
   }
 
   handleSendMessage(message) {
@@ -251,6 +247,8 @@ export default class Game extends Phaser.Scene {
       this.localHero.update(this.cursors);
     }
 
-
+    this.zombies.forEach(zombie => {
+      zombie.update();
+    });
   }
 }
