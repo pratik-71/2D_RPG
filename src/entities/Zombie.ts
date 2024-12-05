@@ -11,15 +11,13 @@ export default class Zombie {
   constructor(scene: Phaser.Scene, x: number, y: number, castle: Castle) {
     this.scene = scene;
     this.castle = castle;  // This should correctly refer to an instance of the Castle class
-    this.speed = 50;  // Adjust speed as needed
+    this.speed = 30;  // Adjust speed as needed
     this.health = 100;  // Adjust health as needed
     this.isAttacking = false;
     this.currentDirection = "down"; // Default direction
-    this.id = Phaser.Math.RND.uuid();  // Generate unique id for the zombie
-
-    // Ensure castle sprite is initialized before creating zombie
-    if (this.castle) {  // Call checkCastleInitialization on the Castle instance
-      // Create the zombie sprite and add it to the scene
+    this.id = Phaser.Math.RND.uuid();
+    
+    if (this.castle) {
       this.sprite = this.scene.physics.add.sprite(x, y, "zombie_run");
       this.sprite.body.setSize(32, 32);
       this.sprite.setCollideWorldBounds(true);
@@ -32,7 +30,7 @@ export default class Zombie {
       });
     } else {
       console.error("Castle is not initialized yet!");
-      return; // Prevent zombie from being created
+      return;
     }
   }
 
@@ -59,45 +57,49 @@ export default class Zombie {
   }
 
   update() {
-    if (!this.castle.castle) return;
-
-    // Move zombie towards castle
-    this.scene.physics.moveToObject(this.sprite, this.castle.castle, this.speed);
-
-    // Get the direction based on the movement velocity
-    const velocityX = this.sprite.body.velocity.x;
-    const velocityY = this.sprite.body.velocity.y;
-
-    // Determine the direction based on velocity
-    if (Math.abs(velocityX) > Math.abs(velocityY)) {
-      this.currentDirection = velocityX > 0 ? "right" : "left";
+    // Check if the sprite or castle is destroyed or inactive
+    if (!this.sprite || !this.sprite.body || !this.castle.castle) return;
+  
+    const targetX = this.castle.castle.x;
+    const targetY = this.castle.castle.y;
+    const zombieX = this.sprite.x;
+    const zombieY = this.sprite.y;
+  
+    const deltaX = targetX - zombieX;
+    const deltaY = targetY - zombieY;
+  
+    // Determine the direction based on the relative position
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      this.currentDirection = deltaX > 0 ? "right" : "left";
     } else {
-      this.currentDirection = velocityY > 0 ? "down" : "up";
+      this.currentDirection = deltaY > 0 ? "down" : "up";
     }
-
-    // Play walking animation if not attacking
+  
+    // Move towards the castle only if the sprite is active
     if (!this.isAttacking) {
+      this.scene.physics.moveToObject(this.sprite, this.castle.castle, this.speed);
       this.sprite.anims.play(`zombie_walk-${this.currentDirection}-${this.id}`, true);
     }
   }
-
+  
+  
   attackCastle() {
     if (this.isAttacking) return;
     this.isAttacking = true;
-
-    // Play attack animation when attacking the castle
     this.sprite.anims.play(`zombie_attack-${this.currentDirection}-${this.id}`);
-    this.castle.takeDamage(10); // Assuming takeDamage is a method on the Castle class
-
+    this.castle.takeDamage(5);
     this.sprite.once("animationcomplete", () => {
       this.isAttacking = false;
     });
   }
+  
 
   takeDamage(amount: number) {
     this.health -= amount;
     if (this.health <= 0) {
-      this.sprite.destroy(); // Remove zombie from scene
+      this.sprite.destroy();  // Remove sprite from scene
+      this.scene.events.off('update', this.update, this); // Remove from update loop
     }
   }
+  
 }
