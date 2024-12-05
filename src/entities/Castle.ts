@@ -19,7 +19,7 @@ export default class Castle {
     this.map = map;
     this.castle = null;  
     this.isCastleInitialized = false;
-    this.health = 5;  // Full health for the castle
+    this.health = 100;  // Full health for the castle
     this.healthBar = null;  // Initially no health bar
     this.gameOverText = null;  // Initially no game over text
     this.mainMenuButton = null;  // Initially no button
@@ -129,8 +129,8 @@ export default class Castle {
       // Show "Game Over" message
       if (!this.gameOverText) {
         this.gameOverText = this.scene.add.text(
-          this.scene.cameras.main.centerX+60,
-          this.scene.cameras.main.centerY+100,
+          this.scene.cameras.main.centerX-250,
+          this.scene.cameras.main.centerY+150,
           'Game Over',
           { fontSize: '48px', fill: '#ff0000', fontFamily: 'Arial' }
         );
@@ -140,8 +140,8 @@ export default class Castle {
       // Add Main Menu button
       if (!this.mainMenuButton) {
         this.mainMenuButton = this.scene.add.text(
-          this.scene.cameras.main.centerX+60,
-          this.scene.cameras.main.centerY + 150,
+          this.scene.cameras.main.centerX-250,
+          this.scene.cameras.main.centerY + 200,
           'Main Menu',
           { fontSize: '32px', fill: '#00ff00', fontFamily: 'Arial' }
         );
