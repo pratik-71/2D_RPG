@@ -14,7 +14,7 @@ export default class Game extends Phaser.Scene {
     this.heroes = []; // Initialize heroes array
     this.zombiesGroup = null;
     this.zombies = [];
-    this.heroGroup = null;
+    this.heroesById = {}
   }
 
   init(data) {
@@ -59,7 +59,6 @@ export default class Game extends Phaser.Scene {
   }
 
   async create() {
-    this.heroGroup = this.physics.add.group(); 
     const map = this.make.tilemap({ key: "game_environment" });
 
     const dungeon_tileset = map.addTilesetImage("duneon", "dungeon_tiles");
@@ -106,7 +105,12 @@ export default class Game extends Phaser.Scene {
         this.players
       );
       this.heroes.push(hero);
-      this.heroGroup.add(hero.sprite)
+      this.heroesById[player.id] = {
+        hero: hero,
+        sprite: hero.sprite,
+    };
+    
+      
       this.physics.add.collider(hero.sprite, boundaryLayer);
       this.physics.add.collider(hero.sprite, this.castle.castle);
       // Enable keyboard input for the local player only
@@ -136,7 +140,7 @@ export default class Game extends Phaser.Scene {
       this.socket,
       this.socketId,
       this.roomCode,
-      this.players
+      this.heroesById
     );
     this.zombiesGroup = this.physics.add.group();
 
@@ -187,8 +191,6 @@ export default class Game extends Phaser.Scene {
     // Listen for attack events from other players
     this.socket.on("playerAttacked", (attackData) => {
       const { socketId, x, y, direction, attackAnimationKey } = attackData;
-
-      // Find the hero who performed the attack
       const attackingHero = this.heroes.find((h) => h.socketId === socketId);
       if (attackingHero) {
         attackingHero.sprite.setPosition(x, y); // Update position if necessary
@@ -238,9 +240,8 @@ export default class Game extends Phaser.Scene {
     // In Game.js (or Game.ts)
     this.socket.on("spawnEnemy", (zombieData) => {
       const { x, y } = zombieData;
-      const localPlayer = this.players.find((p) => p.id === this.socketId);
       if (this.castle.isCastleInitialized) {
-        const zombie = new Zombie(this, x, y, this.castle,localPlayer);
+        const zombie = new Zombie(this, x, y, this.castle,this.socketId);
         this.zombiesGroup.add(zombie.sprite);
         this.zombies.push(zombie); // Track zombies for updates
         zombie.sprite.setScale(0.6);
@@ -265,7 +266,6 @@ export default class Game extends Phaser.Scene {
   update() {
     if (this.localHero && this.cursors) {
       this.localHero.update(this.cursors);
-      
     }
 
     this.zombies.forEach((zombie) => {

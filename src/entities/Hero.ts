@@ -163,8 +163,8 @@ export default class Hero {
   // Handle attack from other players
   onPlayerAttack(data) {
     if (data.socketId !== this.socketId && this.sprite.getBounds().contains(data.x, data.y)) {
-      console.log(`Player ${data.socketId} attacked ${this.playerName}`);
-      this.takeDamage(5); 
+      EventBus.emit("updateHeroHealth","decrease",0.5,this.socketId,this.socket,this.scene.roomCode)
+      this.takeDamage(0.5); 
     }
   }
 

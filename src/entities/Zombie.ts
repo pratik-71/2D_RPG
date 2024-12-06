@@ -12,10 +12,10 @@ export default class Zombie {
   currentDirection: string;
   target: Phaser.Physics.Arcade.Sprite | Castle;
   id: string;
-  attackCooldown: number; // Time in milliseconds between attacks
-  lastAttackTime: number; // Tracks the last time the zombie attacked
+  attackCooldown: number;
+  lastAttackTime: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, castle: Castle) {
+  constructor(scene: Phaser.Scene, x: number, y: number, castle: Castle,socketId) {
     this.scene = scene;
     this.castle = castle;
     this.speed = 30;
@@ -26,6 +26,7 @@ export default class Zombie {
     this.target = this.castle.castle; // Default target is the castle
     this.attackCooldown = 3000; // 3 seconds cooldown for attacks
     this.lastAttackTime = 0; // Initialize the last attack time
+    this.socketId = socketId
 
     // Create zombie sprite
     this.sprite = this.scene.physics.add.sprite(x, y, "zombie_run");
@@ -45,7 +46,7 @@ export default class Zombie {
     this.detectionGraphics.strokeCircle(this.detectionRadius.x, this.detectionRadius.y, 100);
 
     // Hero detection using update method instead of overlap
-    if (this.scene.heroGroup) {
+    if (this.scene.heroesById) {
       this.scene.events.on("update", this.detectHeroes, this);
     }
 
@@ -123,11 +124,13 @@ export default class Zombie {
   }
 
   detectHeroes() {
-    this.scene.heroGroup.getChildren().forEach((child: Phaser.GameObjects.Sprite) => {
+    // Iterate over heroes in heroesById
+    Object.values(this.scene.heroesById).forEach((heroObj: any) => {
+      const child = heroObj.sprite;
       if (child instanceof Phaser.Physics.Arcade.Sprite) {
         const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, child.x, child.y);
         if (distance < 100) {
-          this.target = child;  
+          this.target = child;  // Set hero as target if within range
         } else if (distance > 100 || child.health <= 0) {
           this.target = this.castle.castle; // Return to the castle if the hero is out of range or dead
         }
@@ -137,24 +140,39 @@ export default class Zombie {
 
   attackHero() {
     if (this.isAttacking || !(this.target instanceof Phaser.Physics.Arcade.Sprite)) return;
-
-    // Play attack animation and deal damage
+  
     this.isAttacking = true;
-    this.sprite.anims.play(`zombie_attack-${this.currentDirection}`);
+    this.sprite.anims.play(`zombie_attack-${this.currentDirection}`, true); // Use 'true' to ensure the animation restarts
+  
     this.scene.time.delayedCall(300, () => {
-      EventBus.emit('zombieAttack', this.target, 5); // Deal 5 damage
-    });
-
-    this.sprite.once("animationcomplete", () => {
-      this.isAttacking = false; // Allow new attacks after animation
+      console.log("Target", this.target);
+      console.log("Zombie's socketId:", this.socketId);
+      console.log("heroesById:", this.scene.heroesById);
+  
+      const localPlayer = this.scene.heroesById[this.socketId];
+      console.log("-------------------");
+      console.log(localPlayer);
+      if (!localPlayer) {
+        console.warn(`No hero found for socketId: ${this.socketId}`);
+        return;
+      }
+      if (this.target.id === localPlayer.hero.id) {
+        EventBus.emit('zombieAttack', this.target, 0.5);
+      } else {
+        this.target.takeDamage(0.5);
+      }
+      this.sprite.once("animationcomplete", () => {
+        this.isAttacking = false; // Allow new attacks
+      });
     });
   }
-
+  
+  
   attackCastle() {
     if (this.isAttacking) return;
     this.isAttacking = true;
     this.sprite.anims.play(`zombie_attack-${this.currentDirection}`);
-    this.castle.takeDamage(5); // Ensure castle has a takeDamage method
+    this.castle.takeDamage(0.5); // Ensure castle has a takeDamage method
     this.sprite.once("animationcomplete", () => {
       this.isAttacking = false;
     });

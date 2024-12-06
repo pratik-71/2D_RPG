@@ -27,17 +27,31 @@ const GameCanvas: React.FC = () => {
   const [localSocketId, setLocalSocketId] = useState<string>("");
 
   const updateHeroHealth = (
-    healthIncrease: number,
+    status: string,
+    healthChange: number,
     socketId: string,
     socket: any,
     roomCode: string
   ) => {
-    setHeroHealth((prevHealth) => Math.min(prevHealth + healthIncrease, 100));
-    if (updatedHealth <= 0) {
-      socket.emit("updatePlayerIsDead", { socketId, isDead: true, roomCode });
-    }
-    return updatedHealth;
+    // Update the health based on the status ('increase' or 'decrease')
+    setHeroHealth((prevHealth) => {
+      let updatedHealth = prevHealth;
+      
+      if (status === "increase") {
+        updatedHealth = Math.min(prevHealth + healthChange, 100); // Increase health, but cap at 100
+      } else if (status === "decrease") {
+        updatedHealth = Math.max(prevHealth - healthChange, 0); // Decrease health, but don't go below 0
+      }
+  
+      // Emit the "updatePlayerIsDead" event if health drops to zero
+      if (updatedHealth <= 0) {
+        socket.emit("updatePlayerIsDead", { socketId, isDead: true, roomCode });
+      }
+  
+      return updatedHealth;
+    });
   };
+  
 
   const handleShowMessages = (data, localId) => {
     console.log(data); // For debugging

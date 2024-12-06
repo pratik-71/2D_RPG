@@ -41,7 +41,7 @@ export default class Tree {
             hideProgressBar: true,
           });
           
-          EventBus.emit("updateHeroHealth", 20,this.socketId,this.socket,this.roomCode)
+          EventBus.emit("updateHeroHealth","increase", 20,this.socketId,this.socket,this.roomCode)
           
         }
       }
