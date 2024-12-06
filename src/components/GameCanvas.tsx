@@ -11,8 +11,8 @@ import EventBus from "../EventBus";
 const GameCanvas: React.FC = () => {
   const phaserGame = useRef<Phaser.Game | null>(null);
 
-  const [heroHealth, setHeroHealth] = useState(20);
-  const [castleHealth, setCastleHealth] = useState(100);
+  const [heroHealth, setHeroHealth] = useState(100);
+  const [castleHealth, setCastleHealth] = useState(300);
 
   const [playersCount, setPlayersCount] = useState(1);
   const [enemiesCount, setEnemiesCount] = useState(10);
@@ -52,6 +52,9 @@ const GameCanvas: React.FC = () => {
     });
   };
   
+  const updateCastleHealth =(damage)=>{
+   setCastleHealth(castleHealth-damage)
+  }
 
   const handleShowMessages = (data, localId) => {
     console.log(data); // For debugging
@@ -103,10 +106,12 @@ const GameCanvas: React.FC = () => {
     }
     EventBus.on("updateHeroHealth", updateHeroHealth);
     EventBus.on("ShowMessages", handleShowMessages);
+    EventBus.on("updateCastleHealth",updateCastleHealth)
 
     return () => {
       EventBus.off("updateHeroHealth", updateHeroHealth);
       EventBus.off("ShowMessages", handleShowMessages);
+      EventBus.off("updateCastleHealth",updateCastleHealth)
       phaserGame.current?.destroy(true);
       phaserGame.current = null;
     };

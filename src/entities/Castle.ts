@@ -19,7 +19,7 @@ export default class Castle {
     this.map = map;
     this.castle = null;  
     this.isCastleInitialized = false;
-    this.health = 100;  // Full health for the castle
+    this.health = 300;  // Full health for the castle
     this.healthBar = null;  // Initially no health bar
     this.gameOverText = null;  // Initially no game over text
     this.mainMenuButton = null;  // Initially no button
@@ -39,20 +39,14 @@ export default class Castle {
     const centerY = this.map.heightInPixels / 2;
     this.castle = this.scene.physics.add.sprite(centerX, centerY, 'castle_tiles');
     this.castle.setImmovable(true);
-
-    // Make sure the castle exists before accessing it
     if (this.castle) {
       this.castle.body.setSize(castleObject.width, castleObject.height);
       this.isCastleInitialized = true;
-
-      // Emit the deployEnemy event once the castle is initialized
       if (this.socket) {
         this.socket.emit('deployEnemy', { roomCode: this.roomCode });
       } else {
         console.error('Socket is undefined');
       }
-
-      // Create and position the health bar above the castle
       this.createHealthBar();
     } else {
       console.error('Castle sprite could not be initialized');
@@ -62,13 +56,9 @@ export default class Castle {
   createHealthBar() {
     if (this.castle) {
       const width = this.castle.width;  // Width of the castle sprite
-      const height = 10;  // Height of the health bar
-
-      // Position the health bar above the castle sprite
+      const height = 10;  
       this.healthBar = this.scene.add.graphics();
       this.healthBar.setPosition(this.castle.x - width / 2, this.castle.y - this.castle.height / 2 - height);
-
-      // Draw the health bar (background and fill)
       this.healthBar.fillStyle(0x000000, 1);  // Background (black)
       this.healthBar.fillRect(0, 0, width, height);
 
@@ -110,23 +100,16 @@ export default class Castle {
 
   stopGame() {
     if (this.scene) {
-      // Pause all physics activity
       this.scene.physics.world.pause();
-  
-      // Hide or disable all interactive objects
       this.scene.children.list.forEach((child) => {
         if (child.setVisible) child.setVisible(false); // Hide objects like trees, enemies, etc.
         if (child.body) child.body.enable = false;     // Disable physics bodies
       });
-  
-      // Create a semi-transparent blur effect
       if (!this.blurScreen) {
         this.blurScreen = this.scene.add.graphics();
         this.blurScreen.fillStyle(0x000000, 0.8);  // Dark semi-transparent background
         this.blurScreen.fillRect(0, 0, this.scene.cameras.main.width, this.scene.cameras.main.height);
       }
-  
-      // Show "Game Over" message
       if (!this.gameOverText) {
         this.gameOverText = this.scene.add.text(
           this.scene.cameras.main.centerX-250,
@@ -136,8 +119,6 @@ export default class Castle {
         );
         this.gameOverText.setOrigin(0.5,0.5);  
       }
-  
-      // Add Main Menu button
       if (!this.mainMenuButton) {
         this.mainMenuButton = this.scene.add.text(
           this.scene.cameras.main.centerX-250,
@@ -147,8 +128,6 @@ export default class Castle {
         );
         this.mainMenuButton.setOrigin(0.5, 0.5);
         this.mainMenuButton.setInteractive();
-  
-        // Handle Main Menu button click
         this.mainMenuButton.on('pointerdown', () => {
           this.scene.scene.start('MainMenu');  // Restart or navigate to Main Menu
         });

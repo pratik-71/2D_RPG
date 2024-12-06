@@ -14,8 +14,9 @@ export default class Zombie {
   id: string;
   attackCooldown: number;
   lastAttackTime: number;
+  socketId: string;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, castle: Castle,socketId) {
+  constructor(scene: Phaser.Scene, x: number, y: number, castle: Castle, socketId: string) {
     this.scene = scene;
     this.castle = castle;
     this.speed = 30;
@@ -26,35 +27,36 @@ export default class Zombie {
     this.target = this.castle.castle; // Default target is the castle
     this.attackCooldown = 3000; // 3 seconds cooldown for attacks
     this.lastAttackTime = 0; // Initialize the last attack time
-    this.socketId = socketId
-
+    this.socketId = socketId;
+  
     // Create zombie sprite
     this.sprite = this.scene.physics.add.sprite(x, y, "zombie_run");
     this.sprite.body.setSize(32, 32);
     this.sprite.setCollideWorldBounds(true);
     this.sprite.setDepth(1);
     this.createAnimations();
-
+  
     // Create detection zone
     this.detectionRadius = this.scene.add.zone(x, y).setSize(200, 200);
     this.scene.physics.world.enable(this.detectionRadius);
     (this.detectionRadius.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
     (this.detectionRadius.body as Phaser.Physics.Arcade.Body).setImmovable(true);
-
+  
     this.detectionGraphics = this.scene.add.graphics();
     this.detectionGraphics.lineStyle(2, 0x00ff00, 1);
     this.detectionGraphics.strokeCircle(this.detectionRadius.x, this.detectionRadius.y, 100);
-
+  
     // Hero detection using update method instead of overlap
     if (this.scene.heroesById) {
       this.scene.events.on("update", this.detectHeroes, this);
     }
-
+  
     // Collision with castle
     this.scene.physics.add.collider(this.sprite, this.castle.castle, () => {
       this.attackCastle();
     });
   }
+  
 
   createAnimations() {
     const directions = ["up", "down", "left", "right"];
@@ -140,22 +142,16 @@ export default class Zombie {
 
   attackHero() {
     if (this.isAttacking || !(this.target instanceof Phaser.Physics.Arcade.Sprite)) return;
-  
+
     this.isAttacking = true;
     this.sprite.anims.play(`zombie_attack-${this.currentDirection}`, true); // Use 'true' to ensure the animation restarts
-  
+
     this.scene.time.delayedCall(300, () => {
       console.log("Target", this.target);
       console.log("Zombie's socketId:", this.socketId);
       console.log("heroesById:", this.scene.heroesById);
-  
+
       const localPlayer = this.scene.heroesById[this.socketId];
-      console.log("-------------------");
-      console.log(localPlayer);
-      if (!localPlayer) {
-        console.warn(`No hero found for socketId: ${this.socketId}`);
-        return;
-      }
       if (this.target.id === localPlayer.hero.id) {
         EventBus.emit('zombieAttack', this.target, 0.5);
       } else {
@@ -166,8 +162,7 @@ export default class Zombie {
       });
     });
   }
-  
-  
+
   attackCastle() {
     if (this.isAttacking) return;
     this.isAttacking = true;
