@@ -47,8 +47,6 @@ export default class Zombie {
     // Hero detection using update method instead of overlap
     if (this.scene.heroGroup) {
       this.scene.events.on("update", this.detectHeroes, this);
-    } else {
-      console.warn("Hero group is not initialized.");
     }
 
     // Collision with castle
@@ -122,14 +120,14 @@ export default class Zombie {
         this.attackCastle(); // Trigger castle attack
       }
     }
-}
+  }
+
   detectHeroes() {
     this.scene.heroGroup.getChildren().forEach((child: Phaser.GameObjects.Sprite) => {
       if (child instanceof Phaser.Physics.Arcade.Sprite) {
         const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, child.x, child.y);
         if (distance < 100) {
           this.target = child;  
-          console.log("Hero detected:", child);
         } else if (distance > 100 || child.health <= 0) {
           this.target = this.castle.castle; // Return to the castle if the hero is out of range or dead
         }
@@ -156,7 +154,7 @@ export default class Zombie {
     if (this.isAttacking) return;
     this.isAttacking = true;
     this.sprite.anims.play(`zombie_attack-${this.currentDirection}`);
-    this.castle.takeDamage(5); // Ensure castle has a `takeDamage` method
+    this.castle.takeDamage(5); // Ensure castle has a takeDamage method
     this.sprite.once("animationcomplete", () => {
       this.isAttacking = false;
     });

@@ -136,7 +136,7 @@ export default class Game extends Phaser.Scene {
       this.socket,
       this.socketId,
       this.roomCode,
-      this.heroGroup
+      this.players
     );
     this.zombiesGroup = this.physics.add.group();
 
@@ -238,8 +238,9 @@ export default class Game extends Phaser.Scene {
     // In Game.js (or Game.ts)
     this.socket.on("spawnEnemy", (zombieData) => {
       const { x, y } = zombieData;
+      const localPlayer = this.players.find((p) => p.id === this.socketId);
       if (this.castle.isCastleInitialized) {
-        const zombie = new Zombie(this, x, y, this.castle);
+        const zombie = new Zombie(this, x, y, this.castle,localPlayer);
         this.zombiesGroup.add(zombie.sprite);
         this.zombies.push(zombie); // Track zombies for updates
         zombie.sprite.setScale(0.6);
@@ -264,6 +265,7 @@ export default class Game extends Phaser.Scene {
   update() {
     if (this.localHero && this.cursors) {
       this.localHero.update(this.cursors);
+      
     }
 
     this.zombies.forEach((zombie) => {
