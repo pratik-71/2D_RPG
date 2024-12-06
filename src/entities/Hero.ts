@@ -1,20 +1,21 @@
 import Phaser from "phaser";
+import EventBus from "../EventBus";
 
 export default class Hero {
   constructor(scene, x, y, playerName, socketId, socket, players) {
-    this.playerName = playerName
+    this.playerName = playerName;
     this.scene = scene;
     this.socketId = socketId;
-    this.sprite = scene.physics.add.sprite(x, y, "hero"); 
-    this.sprite.body.setSize(1, 1); 
+    this.sprite = scene.physics.add.sprite(x, y, "hero");
+    this.sprite.body.setSize(1, 1);
     this.sprite.setCollideWorldBounds(true);
-    this.sprite.setDepth(2); 
+    this.sprite.setDepth(2);
     this.socket = socket;
     this.players = players;
     this.createAnimations();
     this.isAttacking = false;
     this.currentDirection = "down";
-    this.health=100;
+    this.health = 100;
 
     // Add a text object for displaying the player's name
     this.nameText = this.scene.add
@@ -25,7 +26,7 @@ export default class Hero {
         align: "center",
       })
       .setOrigin(0.5, 0.5)
-      .setDepth(3); 
+      .setDepth(3);
 
     // Handle attack on pointer down
     if (this.scene.socketId === this.socketId) {
@@ -33,6 +34,8 @@ export default class Hero {
         this.attack();
       });
     }
+
+    EventBus.on("zombieAttack", this.onPlayerAttack, this);
   }
 
   // Create walk and attack animations for each direction
@@ -56,14 +59,12 @@ export default class Hero {
         key: `hero_attack-${dir}`,
         frames: this.scene.anims.generateFrameNumbers("hero_attack", {
           start: frameStarts[index],
-          end: frameStarts[index] + 7, 
+          end: frameStarts[index] + 7,
         }),
         frameRate: 15,
-        repeat: 0, 
+        repeat: 0,
       });
     });
-
-
   }
 
   // Update method to control movement and animations
@@ -146,6 +147,29 @@ export default class Hero {
 
   // Method to update the player's name
   updateName(newName) {
-    this.nameText.setText(newName); 
+    this.nameText.setText(newName);
+  }
+
+  // Method to take damage and update health
+  takeDamage(amount) {
+    this.health -= amount;
+    if (this.health <= 0) {
+      this.die();
+    } else {
+      console.log(`${this.playerName} has ${this.health} health left.`);
+    }
+  }
+
+  // Handle attack from other players
+  onPlayerAttack(data) {
+    if (data.socketId !== this.socketId && this.sprite.getBounds().contains(data.x, data.y)) {
+      console.log(`Player ${data.socketId} attacked ${this.playerName}`);
+      this.takeDamage(5); 
+    }
+  }
+
+  die() {
+    console.log(`${this.playerName} has died.`);
+    this.sprite.setVisible(false);
   }
 }

@@ -14,6 +14,7 @@ export default class Game extends Phaser.Scene {
     this.heroes = []; // Initialize heroes array
     this.zombiesGroup = null;
     this.zombies = [];
+    this.heroGroup = null;
   }
 
   init(data) {
@@ -58,6 +59,7 @@ export default class Game extends Phaser.Scene {
   }
 
   async create() {
+    this.heroGroup = this.physics.add.group(); 
     const map = this.make.tilemap({ key: "game_environment" });
 
     const dungeon_tileset = map.addTilesetImage("duneon", "dungeon_tiles");
@@ -88,7 +90,7 @@ export default class Game extends Phaser.Scene {
     const boundaryLayer = map.createLayer("boundry", dungeon_tileset, 0, 0);
     boundaryLayer.setCollisionByExclusion([-1]);
 
-    this.castle = new Castle(this, map, this.socket,this.roomCode);
+    this.castle = new Castle(this, map, this.socket, this.roomCode);
 
     // Create heroes for all players
     this.players.forEach((player, index) => {
@@ -104,8 +106,7 @@ export default class Game extends Phaser.Scene {
         this.players
       );
       this.heroes.push(hero);
-
-      // Enable physics and collisions for each hero
+      this.heroGroup.add(hero.sprite)
       this.physics.add.collider(hero.sprite, boundaryLayer);
       this.physics.add.collider(hero.sprite, this.castle.castle);
       // Enable keyboard input for the local player only
@@ -134,15 +135,33 @@ export default class Game extends Phaser.Scene {
       map,
       this.socket,
       this.socketId,
-      this.roomCode
+      this.roomCode,
+      this.heroGroup
     );
     this.zombiesGroup = this.physics.add.group();
 
-    // Set the camera to follow the local player's hero
     this.cameras.main.startFollow(this.localHero.sprite, true, 0.1, 0.1);
     this.cameras.main.setZoom(2);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+    // After setting up heroes and zombies, add collision detection
+    this.heroes.forEach((hero) => {
+      this.zombies.forEach((zombie) => {
+        this.physics.add.collider(
+          zombie.sprite,
+          hero.sprite,
+          (zombie, hero) => {
+            if (zombie && hero) {
+              alert("000000000")
+              hero.takeDamage(5); 
+              zombie.sprite.anims.play("zombie-attack", true); 
+              hero.sprite.anims.play("hero_attack", true); 
+            }
+          }
+        );
+      });
+    });
 
     // Listen for player updates
     this.socket.on("updatePlayers", (updatedPlayers) => {
@@ -174,7 +193,7 @@ export default class Game extends Phaser.Scene {
       if (attackingHero) {
         attackingHero.sprite.setPosition(x, y); // Update position if necessary
         attackingHero.sprite.anims.play(attackAnimationKey, true); // Play attack animation
-      } 
+      }
     });
 
     // Listen for the updatePlayerIsDead event
@@ -219,12 +238,12 @@ export default class Game extends Phaser.Scene {
     // In Game.js (or Game.ts)
     this.socket.on("spawnEnemy", (zombieData) => {
       const { x, y } = zombieData;
-      if(this.castle.isCastleInitialized){
+      if (this.castle.isCastleInitialized) {
         const zombie = new Zombie(this, x, y, this.castle);
-      this.zombiesGroup.add(zombie.sprite);
-      this.zombies.push(zombie); // Track zombies for updates
-      zombie.sprite.setScale(0.6);
-      zombie.sprite.setData('instance', zombie);
+        this.zombiesGroup.add(zombie.sprite);
+        this.zombies.push(zombie); // Track zombies for updates
+        zombie.sprite.setScale(0.6);
+        zombie.sprite.setData("instance", zombie);
       }
     });
   }
@@ -247,7 +266,7 @@ export default class Game extends Phaser.Scene {
       this.localHero.update(this.cursors);
     }
 
-    this.zombies.forEach(zombie => {
+    this.zombies.forEach((zombie) => {
       zombie.update();
     });
   }
