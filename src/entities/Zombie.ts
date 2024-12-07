@@ -15,8 +15,9 @@ export default class Zombie {
   attackCooldown: number;
   lastAttackTime: number;
   socketId: string;
+  zombieData: any;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, castle: Castle, socketId: string,zombieData:any) {
+  constructor(scene: Phaser.Scene, x: number, y: number, castle: Castle, socketId: string, zombieData: any) {
     this.scene = scene;
     this.castle = castle;
     this.speed = 30;
@@ -28,7 +29,7 @@ export default class Zombie {
     this.attackCooldown = 3000; // 3 seconds cooldown for attacks
     this.lastAttackTime = 0; // Initialize the last attack time
     this.socketId = socketId;
-    this.zombieData = zombieData
+    this.zombieData = zombieData;
 
     // Create zombie sprite
     this.sprite = this.scene.physics.add.sprite(x, y, "zombie_run");
@@ -126,44 +127,44 @@ export default class Zombie {
   }
 
   detectClosestHero() {
+    if (!this.sprite || !this.scene.heroesById) return; // Ensure sprite and heroesById exist
+  
     // Initialize variables to track the closest hero
     let closestHero: Phaser.Physics.Arcade.Sprite | null = null;
     let closestDistance = 100; // Maximum detection range
-
+  
     // Iterate over heroes in heroesById and find the closest hero
     Object.values(this.scene.heroesById).forEach((heroObj: any) => {
-      const child = heroObj.sprite;
-      if (child instanceof Phaser.Physics.Arcade.Sprite) {
-        const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, child.x, child.y);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestHero = child; // Update closest hero
-        }
+      if (!heroObj || !heroObj.sprite || !heroObj.sprite.body || !heroObj.sprite.active) return; // Skip invalid heroes
+  
+      const heroSprite = heroObj.sprite as Phaser.Physics.Arcade.Sprite;
+      const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, heroSprite.x, heroSprite.y)
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestHero = heroSprite;
       }
     });
-
-    // If a closest hero is found within the range, target that hero
-    if (closestHero && closestDistance < 100) {
+    if (closestHero) {
       this.target = closestHero;
     } else {
-      this.target = this.castle.castle; // If no hero is within range, return to the castle
+      this.target = this.castle.castle; 
     }
   }
+  
 
   attackHero() {
     if (this.isAttacking || !(this.target instanceof Phaser.Physics.Arcade.Sprite)) return;
 
     this.isAttacking = true;
-    this.sprite.anims.play(`zombie_attack-${this.currentDirection}`, true); // Use 'true' to ensure the animation restarts
+    this.sprite.anims.play(`zombie_attack-${this.currentDirection}`, true);
 
     this.scene.time.delayedCall(300, () => {
       const localPlayer = this.scene.heroesById[this.socketId];
       const hero = this.scene.heroesById[this.target.id];
-
       if (this.target.id === localPlayer.hero.socketId) {
-        EventBus.emit('zombieAttack', this.target, 0.5);
-      } else {
-        hero.hero.takeDamage(0.5,this.target.id,this.target);
+        EventBus.emit("zombieAttack", this.target, 0.5);
+      } else if (hero) {
+        hero.hero.takeDamage(0.5, this.target.id, hero.sprite);
       }
 
       this.sprite.once("animationcomplete", () => {

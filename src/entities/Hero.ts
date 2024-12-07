@@ -154,9 +154,8 @@ export default class Hero {
   takeDamage(amount,id,target) {
     this.health -= amount;
     if (this.health <= 0) {
+      this.scene.heroesById[id] = undefined;
       this.die(id,target);
-    } else {
-      console.log(`${this.playerName} has ${this.health} health left.`);
     }
   }
 
@@ -166,25 +165,29 @@ export default class Hero {
     }
   }
   die(id, target) {
-    console.log("==================================")
-    console.log(id)
-    console.log(target)
     this.socket.emit("updatePlayerIsDead", {
         socketId: id,
         isDead: true,
         roomCode: this.scene.roomCode
     });
 
-    // If a target is provided, destroy the target sprite
-    if (target) {
-        target.setVisible(false); // Hide the target sprite
-        target.destroy(); // Destroy the target sprite
+    if (target && target instanceof Phaser.GameObjects.Sprite) {
+        console.log("Destroying target sprite...");
+        target.setVisible(false);
+        target.destroy();
+    } else {
+        console.warn("Invalid target passed to die().");
     }
 
-    // Hide and destroy the current player's sprite
-    this.sprite.setVisible(false);
-    this.sprite.destroy();
+    if (this.sprite) {
+        console.log("Destroying hero sprite...");
+        this.sprite.setVisible(false);
+        this.sprite.destroy();
+    } else {
+        console.warn("No sprite found for this hero.");
+    }
 }
+
 
 
 
