@@ -42,8 +42,6 @@ const GameCanvas: React.FC = () => {
       } else if (status === "decrease") {
         updatedHealth = Math.max(prevHealth - healthChange, 0); // Decrease health, but don't go below 0
       }
-  
-      // Emit the "updatePlayerIsDead" event if health drops to zero
       if (updatedHealth <= 0) {
         socket.emit("updatePlayerIsDead", { socketId, isDead: true, roomCode });
       }

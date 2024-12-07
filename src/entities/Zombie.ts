@@ -16,7 +16,7 @@ export default class Zombie {
   lastAttackTime: number;
   socketId: string;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, castle: Castle, socketId: string) {
+  constructor(scene: Phaser.Scene, x: number, y: number, castle: Castle, socketId: string,zombieData:any) {
     this.scene = scene;
     this.castle = castle;
     this.speed = 30;
@@ -28,6 +28,7 @@ export default class Zombie {
     this.attackCooldown = 3000; // 3 seconds cooldown for attacks
     this.lastAttackTime = 0; // Initialize the last attack time
     this.socketId = socketId;
+    this.zombieData = zombieData
 
     // Create zombie sprite
     this.sprite = this.scene.physics.add.sprite(x, y, "zombie_run");
@@ -162,7 +163,7 @@ export default class Zombie {
       if (this.target.id === localPlayer.hero.socketId) {
         EventBus.emit('zombieAttack', this.target, 0.5);
       } else {
-        hero.hero.takeDamage(0.5);
+        hero.hero.takeDamage(0.5,this.target.id,this.target);
       }
 
       this.sprite.once("animationcomplete", () => {

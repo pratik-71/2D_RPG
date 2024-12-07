@@ -245,7 +245,7 @@ this.heroesById[player.id].sprite.health = player.health || 100; // Default heal
     this.socket.on("spawnEnemy", (zombieData) => {
       const { x, y } = zombieData;
       if (this.castle.isCastleInitialized) {
-        const zombie = new Zombie(this, x, y, this.castle,this.socketId);
+        const zombie = new Zombie(this, x, y, this.castle,this.socketId,zombieData);
         this.zombiesGroup.add(zombie.sprite);
         this.zombies.push(zombie); // Track zombies for updates
         zombie.sprite.setScale(0.6);

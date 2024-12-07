@@ -151,10 +151,10 @@ export default class Hero {
   }
 
   // Method to take damage and update health
-  takeDamage(amount) {
+  takeDamage(amount,id,target) {
     this.health -= amount;
     if (this.health <= 0) {
-      this.die();
+      this.die(id,target);
     } else {
       console.log(`${this.playerName} has ${this.health} health left.`);
     }
@@ -165,9 +165,27 @@ export default class Hero {
       EventBus.emit("updateHeroHealth","decrease",0.5,this.socketId,this.socket,this.scene.roomCode)
     }
   }
+  die(id, target) {
+    console.log("==================================")
+    console.log(id)
+    console.log(target)
+    this.socket.emit("updatePlayerIsDead", {
+        socketId: id,
+        isDead: true,
+        roomCode: this.scene.roomCode
+    });
 
-  die() {
-    console.log(`${this.playerName} has died.`);
+    // If a target is provided, destroy the target sprite
+    if (target) {
+        target.setVisible(false); // Hide the target sprite
+        target.destroy(); // Destroy the target sprite
+    }
+
+    // Hide and destroy the current player's sprite
     this.sprite.setVisible(false);
-  }
+    this.sprite.destroy();
+}
+
+
+
 }
