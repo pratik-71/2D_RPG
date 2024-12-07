@@ -114,6 +114,8 @@ export default class Zombie {
       this.scene.physics.moveToObject(this.sprite, this.target, this.speed);
       this.sprite.anims.play(`zombie_walk-${this.currentDirection}`, true);
     }
+
+    // If the zombie is within attack range of the target (hero or castle)
     if (Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, this.target.x, this.target.y) < 50) {
       if (this.target instanceof Phaser.Physics.Arcade.Sprite) {
         this.attackHero(); // Trigger hero attack
@@ -124,48 +126,42 @@ export default class Zombie {
   }
 
   detectHeroes() {
-    let closestHero = null; 
-    let closestDistance = Infinity; 
+    // Iterate over heroes in heroesById
     Object.values(this.scene.heroesById).forEach((heroObj: any) => {
-        const hero = heroObj.hero; 
-        const heroSprite = hero.sprite; 
-        
-        if (heroSprite instanceof Phaser.Physics.Arcade.Sprite) {
-            const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, heroSprite.x, heroSprite.y);
-            if (distance < 100 && distance < closestDistance) {
-                closestHero = heroSprite;
-                closestDistance = distance;
-            }
+      const child = heroObj.sprite;
+      if (child instanceof Phaser.Physics.Arcade.Sprite) {
+        const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, child.x, child.y);
+        if (distance < 100) {
+          this.target = child;  // Set hero as target if within range
+        } else if (distance > 100 || child.health <= 0) {
+          this.target = this.castle.castle; // Return to the castle if the hero is out of range or dead
         }
+      }
     });
+  }
 
-    if (closestHero) {
-        this.target = closestHero;
-    } else {
-        this.target = this.castle.castle;
-    }
-}
-
-
-attackHero() {
+  attackHero() {
     if (this.isAttacking || !(this.target instanceof Phaser.Physics.Arcade.Sprite)) return;
 
     this.isAttacking = true;
     this.sprite.anims.play(`zombie_attack-${this.currentDirection}`, true); // Use 'true' to ensure the animation restarts
 
     this.scene.time.delayedCall(300, () => {
-        const localPlayer = this.scene.heroesById[this.socketId];
-        if (this.target.id === localPlayer.hero.id) {
-            EventBus.emit('zombieAttack', this.target, 0.5);
-        } else {
-            this.target.takeDamage(0.5); 
-        }
-        this.sprite.once("animationcomplete", () => {
-            this.isAttacking = false;
-        });
-    });
-}
+      console.log("Target", this.target);
+      console.log("Zombie's socketId:", this.socketId);
+      console.log("heroesById:", this.scene.heroesById);
 
+      const localPlayer = this.scene.heroesById[this.socketId];
+      if (this.target.id === localPlayer.hero.id) {
+        EventBus.emit('zombieAttack', this.target, 0.5);
+      } else {
+        hero.takeDamage(0.5);
+      }
+      this.sprite.once("animationcomplete", () => {
+        this.isAttacking = false; // Allow new attacks
+      });
+    });
+  }
 
   attackCastle() {
     if (this.isAttacking) return;
