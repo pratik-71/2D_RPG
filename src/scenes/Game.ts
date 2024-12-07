@@ -109,6 +109,10 @@ export default class Game extends Phaser.Scene {
         hero: hero,
         sprite: hero.sprite,
     };
+    // Add the player's ID and name directly to the sprite for easy access
+this.heroesById[player.id].sprite.id = player.id;
+this.heroesById[player.id].sprite.name = player.name; // Assuming `player.name` exists
+this.heroesById[player.id].sprite.health = player.health || 100; // Default health if not provided
     
       
       this.physics.add.collider(hero.sprite, boundaryLayer);

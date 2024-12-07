@@ -147,12 +147,13 @@ export default class Zombie {
     this.sprite.anims.play(`zombie_attack-${this.currentDirection}`, true); // Use 'true' to ensure the animation restarts
 
     this.scene.time.delayedCall(300, () => {
-      console.log("Target", this.target);
+      console.log("Target", this.target.id);
       console.log("Zombie's socketId:", this.socketId);
       console.log("heroesById:", this.scene.heroesById);
-
       const localPlayer = this.scene.heroesById[this.socketId];
-      if (this.target.id === localPlayer.hero.id) {
+      console.log(localPlayer)
+      if (this.target.id === localPlayer.hero.socketId) {
+        alert("fx")
         EventBus.emit('zombieAttack', this.target, 0.5);
       } else {
         hero.takeDamage(0.5);
