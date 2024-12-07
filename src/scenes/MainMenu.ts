@@ -149,8 +149,7 @@ export default class MainMenu extends Phaser.Scene {
       this.socket.emit('joinRoom', { roomCode, name: this.playerName }); // Send player name to backend
       toast.success('You Joined Room!', {
         position: 'top-center',
-        autoClose: 2000,
-        className:'custom-toast'
+        autoClose: 1000,
       });
     }
   }

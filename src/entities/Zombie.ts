@@ -28,35 +28,34 @@ export default class Zombie {
     this.attackCooldown = 3000; // 3 seconds cooldown for attacks
     this.lastAttackTime = 0; // Initialize the last attack time
     this.socketId = socketId;
-  
+
     // Create zombie sprite
     this.sprite = this.scene.physics.add.sprite(x, y, "zombie_run");
     this.sprite.body.setSize(32, 32);
     this.sprite.setCollideWorldBounds(true);
     this.sprite.setDepth(1);
     this.createAnimations();
-  
+
     // Create detection zone
     this.detectionRadius = this.scene.add.zone(x, y).setSize(200, 200);
     this.scene.physics.world.enable(this.detectionRadius);
     (this.detectionRadius.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
     (this.detectionRadius.body as Phaser.Physics.Arcade.Body).setImmovable(true);
-  
+
     this.detectionGraphics = this.scene.add.graphics();
     this.detectionGraphics.lineStyle(2, 0x00ff00, 1);
     this.detectionGraphics.strokeCircle(this.detectionRadius.x, this.detectionRadius.y, 100);
-  
+
     // Hero detection using update method instead of overlap
     if (this.scene.heroesById) {
-      this.scene.events.on("update", this.detectHeroes, this);
+      this.scene.events.on("update", this.detectClosestHero, this);
     }
-  
+
     // Collision with castle
     this.scene.physics.add.collider(this.sprite, this.castle.castle, () => {
       this.attackCastle();
     });
   }
-  
 
   createAnimations() {
     const directions = ["up", "down", "left", "right"];
@@ -125,19 +124,29 @@ export default class Zombie {
     }
   }
 
-  detectHeroes() {
-    // Iterate over heroes in heroesById
+  detectClosestHero() {
+    // Initialize variables to track the closest hero
+    let closestHero: Phaser.Physics.Arcade.Sprite | null = null;
+    let closestDistance = 100; // Maximum detection range
+
+    // Iterate over heroes in heroesById and find the closest hero
     Object.values(this.scene.heroesById).forEach((heroObj: any) => {
       const child = heroObj.sprite;
       if (child instanceof Phaser.Physics.Arcade.Sprite) {
         const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, child.x, child.y);
-        if (distance < 100) {
-          this.target = child;  // Set hero as target if within range
-        } else if (distance > 100 || child.health <= 0) {
-          this.target = this.castle.castle; // Return to the castle if the hero is out of range or dead
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestHero = child; // Update closest hero
         }
       }
     });
+
+    // If a closest hero is found within the range, target that hero
+    if (closestHero && closestDistance < 100) {
+      this.target = closestHero;
+    } else {
+      this.target = this.castle.castle; // If no hero is within range, return to the castle
+    }
   }
 
   attackHero() {
@@ -147,21 +156,20 @@ export default class Zombie {
     this.sprite.anims.play(`zombie_attack-${this.currentDirection}`, true); // Use 'true' to ensure the animation restarts
 
     this.scene.time.delayedCall(300, () => {
-        const localPlayer = this.scene.heroesById[this.socketId];
-        const hero = this.scene.heroesById[this.target.id];
+      const localPlayer = this.scene.heroesById[this.socketId];
+      const hero = this.scene.heroesById[this.target.id];
 
-        if (this.target.id === localPlayer.hero.socketId) {
-            EventBus.emit('zombieAttack', this.target, 0.5);
-        } else {
-            hero.hero.takeDamage(0.5);
-        }
+      if (this.target.id === localPlayer.hero.socketId) {
+        EventBus.emit('zombieAttack', this.target, 0.5);
+      } else {
+        hero.hero.takeDamage(0.5);
+      }
 
-        this.sprite.once("animationcomplete", () => {
-            this.isAttacking = false; // Allow new attacks
-        });
+      this.sprite.once("animationcomplete", () => {
+        this.isAttacking = false; // Allow new attacks
+      });
     });
-}
-
+  }
 
   attackCastle() {
     if (this.isAttacking) return;
@@ -172,5 +180,4 @@ export default class Zombie {
       this.isAttacking = false;
     });
   }
-
 }
