@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import EventBus from '../EventBus';
+import '../App.css'
 
 export default class Castle {
   scene: Phaser.Scene;
@@ -82,6 +84,7 @@ export default class Castle {
   // Method to handle damage taken by the castle
   takeDamage(amount: number) {
     if (this.castle) {
+      EventBus.emit("updateCastleHealth",amount)
       this.health -= amount;  // Decrease health
       if (this.health <= 0) {
         this.health = 0;
@@ -100,41 +103,68 @@ export default class Castle {
 
   stopGame() {
     if (this.scene) {
+      // Pause the physics world
       this.scene.physics.world.pause();
+  
+      // Hide all objects in the scene (trees, enemies, etc.)
       this.scene.children.list.forEach((child) => {
-        if (child.setVisible) child.setVisible(false); // Hide objects like trees, enemies, etc.
+        if (child.setVisible) child.setVisible(false); // Hide objects
         if (child.body) child.body.enable = false;     // Disable physics bodies
       });
+  
+      // Create blur screen only once
       if (!this.blurScreen) {
         this.blurScreen = this.scene.add.graphics();
         this.blurScreen.fillStyle(0x000000, 0.8);  // Dark semi-transparent background
-        this.blurScreen.fillRect(0, 0, this.scene.cameras.main.width, this.scene.cameras.main.height);
+        this.blurScreen.fillRect(0, 0, this.scene.sys.game.config.width, this.scene.sys.game.config.height);  // Fill screen
       }
+  
+      // Create the Game Over message using HTML
       if (!this.gameOverText) {
-        this.gameOverText = this.scene.add.text(
-          this.scene.cameras.main.centerX-250,
-          this.scene.cameras.main.centerY+150,
-          'Game Over',
-          { fontSize: '48px', fill: '#ff0000', fontFamily: 'Arial' }
-        );
-        this.gameOverText.setOrigin(0.5,0.5);  
+        this.gameOverText = document.createElement('div');
+        this.gameOverText.innerHTML = 'Game Over';
+        this.gameOverText.style.position = 'absolute';
+        this.gameOverText.style.top = '40%';  // Vertical centering
+        this.gameOverText.style.left = '50%'; // Horizontal centering
+        this.gameOverText.style.transform = 'translate(-50%, -50%)'; // Adjust position for exact centering
+        this.gameOverText.style.fontSize = '48px';
+        this.gameOverText.style.color = '#ff0000';
+        this.gameOverText.style.fontFamily = 'Arial';
+        this.gameOverText.style.zIndex = '1000'; // Make sure it's above the game canvas
+        document.body.appendChild(this.gameOverText);  // Add it to the document body
       }
+  
+      // Create the Main Menu button using HTML
       if (!this.mainMenuButton) {
-        this.mainMenuButton = this.scene.add.text(
-          this.scene.cameras.main.centerX-250,
-          this.scene.cameras.main.centerY + 200,
-          'Main Menu',
-          { fontSize: '32px', fill: '#00ff00', fontFamily: 'Arial' }
-        );
-        this.mainMenuButton.setOrigin(0.5, 0.5);
-        this.mainMenuButton.setInteractive();
-        this.mainMenuButton.on('pointerdown', () => {
+        this.mainMenuButton = document.createElement('button');
+        this.mainMenuButton.innerHTML = 'Main Menu';
+        this.mainMenuButton.style.position = 'absolute';
+        this.mainMenuButton.style.top = 'calc(40% + 50px)';  // Below the 'Game Over' text
+        this.mainMenuButton.style.left = '50%';  // Horizontal centering
+        this.mainMenuButton.style.transform = 'translateX(-50%)'; // Center horizontally
+        this.mainMenuButton.style.fontSize = '32px';
+        this.mainMenuButton.style.color = '#00ff00';
+        this.mainMenuButton.style.backgroundColor = 'transparent';
+        this.mainMenuButton.style.border = '2px solid #00ff00';
+        this.mainMenuButton.style.padding = '10px 20px';
+        this.mainMenuButton.style.zIndex = '1000';  // Make sure it's above the game canvas
+  
+        // Button click action to restart or navigate to the Main Menu
+        this.mainMenuButton.addEventListener('click', () => {
           this.scene.scene.start('MainMenu');  // Restart or navigate to Main Menu
         });
+  
+        document.body.appendChild(this.mainMenuButton);  // Add it to the document body
       }
     }
-    this.socket.emit("deleteRoom",{roomCode:this.roomCode})
+  
+    // Emit event to delete the room
+    this.socket.emit("deleteRoom", { roomCode: this.roomCode });
   }
+  
+  
+  
+  
   checkCastleInitialization() {
     return this.isCastleInitialized;
   }

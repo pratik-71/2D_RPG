@@ -7,15 +7,13 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../App.css";
 import EventBus from "../EventBus";
+const MAX_CASTLE_HEALTH = 300;
 
 const GameCanvas: React.FC = () => {
   const phaserGame = useRef<Phaser.Game | null>(null);
 
   const [heroHealth, setHeroHealth] = useState(100);
-  const [castleHealth, setCastleHealth] = useState(300);
-
-  const [playersCount, setPlayersCount] = useState(1);
-  const [enemiesCount, setEnemiesCount] = useState(10);
+  const [castleHealth, setCastleHealth] = useState(MAX_CASTLE_HEALTH);
   const [showChat, setShowChat] = useState(false);
   const chatTimeout = useRef(null);
 
@@ -50,9 +48,14 @@ const GameCanvas: React.FC = () => {
     });
   };
   
-  const updateCastleHealth =(damage)=>{
-   setCastleHealth(castleHealth-damage)
-  }
+ 
+  const updateCastleHealth = (damage: number) => {
+    setCastleHealth((prevHealth) => {
+      const newHealth = Math.max(prevHealth - damage, 0);
+      return newHealth;
+    });
+  };
+
 
   const handleShowMessages = (data, localId) => {
     console.log(data); // For debugging
@@ -110,6 +113,7 @@ const GameCanvas: React.FC = () => {
       EventBus.off("updateHeroHealth", updateHeroHealth);
       EventBus.off("ShowMessages", handleShowMessages);
       EventBus.off("updateCastleHealth",updateCastleHealth)
+
       phaserGame.current?.destroy(true);
       phaserGame.current = null;
     };
@@ -137,10 +141,12 @@ const GameCanvas: React.FC = () => {
           <div className="health-bar">
             <h3>Castle Health</h3>
             <div className="health-background">
-              <div
-                className="health-fill"
-                style={{ width: `${castleHealth}%` }}
-              ></div>
+            <div
+              className="health-fill"
+              style={{
+                width: `${(castleHealth / MAX_CASTLE_HEALTH) * 100}%`,
+              }}
+            ></div>
             </div>
           </div>
         </div>

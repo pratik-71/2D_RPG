@@ -30,6 +30,7 @@ export default class Zombie {
     this.lastAttackTime = 0; // Initialize the last attack time
     this.socketId = socketId;
     this.zombieData = zombieData;
+    this.flag = true;
 
     // Create zombie sprite
     this.sprite = this.scene.physics.add.sprite(x, y, "zombie_run");
@@ -45,8 +46,11 @@ export default class Zombie {
     (this.detectionRadius.body as Phaser.Physics.Arcade.Body).setImmovable(true);
 
     this.detectionGraphics = this.scene.add.graphics();
-    this.detectionGraphics.lineStyle(2, 0x00ff00, 1);
-    this.detectionGraphics.strokeCircle(this.detectionRadius.x, this.detectionRadius.y, 100);
+    // Set the line style to transparent (making the circle invisible)
+    this.detectionGraphics.lineStyle(0, 0x000000, 0); // Invisible circle, line width 0
+
+    // Optionally, you can use fill to make it fully transparent if needed
+    // this.detectionGraphics.fillStyle(0x000000, 0); // Completely transparent fill
 
     // Hero detection using update method instead of overlap
     if (this.scene.heroesById) {
@@ -95,8 +99,9 @@ export default class Zombie {
     this.detectionRadius.x = this.sprite.x;
     this.detectionRadius.y = this.sprite.y;
     this.detectionGraphics.clear();
+    // The circle remains functional but invisible
     this.detectionGraphics.strokeCircle(this.detectionRadius.x, this.detectionRadius.y, 100);
-
+  
     const { x: targetX, y: targetY } = this.target;
     const deltaX = targetX - this.sprite.x;
     const deltaY = targetY - this.sprite.y;
@@ -116,6 +121,9 @@ export default class Zombie {
       this.sprite.anims.play(`zombie_walk-${this.currentDirection}`, true);
     }
 
+    // Check for overlaps with heroes
+    this.checkHeroAttack();
+
     // If the zombie is within attack range of the target (hero or castle)
     if (Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, this.target.x, this.target.y) < 50) {
       if (this.target instanceof Phaser.Physics.Arcade.Sprite) {
@@ -126,31 +134,64 @@ export default class Zombie {
     }
   }
 
-  detectClosestHero() {
-    if (!this.sprite || !this.scene.heroesById) return; // Ensure sprite and heroesById exist
-  
-    // Initialize variables to track the closest hero
-    let closestHero: Phaser.Physics.Arcade.Sprite | null = null;
-    let closestDistance = 100; // Maximum detection range
-  
-    // Iterate over heroes in heroesById and find the closest hero
+  checkHeroAttack() {
     Object.values(this.scene.heroesById).forEach((heroObj: any) => {
-      if (!heroObj || !heroObj.sprite || !heroObj.sprite.body || !heroObj.sprite.active) return; // Skip invalid heroes
+      if (!heroObj || !heroObj.sprite || !heroObj.sprite.body) return;
+      
+      if (this.scene.physics.overlap(heroObj.sprite, this.sprite)) {
+        const currentAnim = heroObj.sprite.anims.currentAnim;
+        
+        if(!currentAnim.key.includes("attack") ){
+          this.flag = true;
+        } 
+        if (currentAnim && currentAnim.key.includes("attack") && this.flag) {
+          console.log(`Zombie ${this.id} hit by Hero ${heroObj.id}`);
+          this.flag = false;
+          this.takeDamage(5); 
+        }
+      }
+    });
+  }
   
+  
+
+  takeDamage(amount: number) {
+    this.zombieData.health -= amount;
+    console.log(`Zombie ${this.zombieData.id} took ${amount} damage. Remaining health: ${this.zombieData.health}`);
+
+    if (this.zombieData.health <= 0) {
+      this.destroyZombie();
+    }
+  }
+
+  destroyZombie() {
+    console.log(`Zombie ${this.zombieData.id} is destroyed.`);
+    this.sprite.destroy();
+  }
+
+  detectClosestHero() {
+    if (!this.sprite || !this.scene.heroesById) return;
+
+    let closestHero: Phaser.Physics.Arcade.Sprite | null = null;
+    let closestDistance = 100;
+
+    Object.values(this.scene.heroesById).forEach((heroObj: any) => {
+      if (!heroObj || !heroObj.sprite || !heroObj.sprite.body || !heroObj.sprite.active) return;
+
       const heroSprite = heroObj.sprite as Phaser.Physics.Arcade.Sprite;
-      const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, heroSprite.x, heroSprite.y)
+      const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, heroSprite.x, heroSprite.y);
       if (distance < closestDistance) {
         closestDistance = distance;
         closestHero = heroSprite;
       }
     });
+
     if (closestHero) {
       this.target = closestHero;
     } else {
-      this.target = this.castle.castle; 
+      this.target = this.castle.castle;
     }
   }
-  
 
   attackHero() {
     if (this.isAttacking || !(this.target instanceof Phaser.Physics.Arcade.Sprite)) return;
