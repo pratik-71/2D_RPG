@@ -156,10 +156,7 @@ export default class Hero {
     this.health -= amount;
     if (this.health <= 0) {
       this.scene.heroesById[id] = undefined;
-      this.killcount++;
-      if(killcount>=40){
-        this.StopGame
-      }
+      console.log(this.killcount)
       this.die(id,target);
     }
   }
@@ -193,70 +190,5 @@ export default class Hero {
         console.warn("No sprite found for this hero.");
     }
 }
-
-stopGame() {
-  alert("x")
-  if (this.scene) {
-   alert("b")
-    this.scene.physics.world.pause();
-
-    // Hide all objects in the scene (trees, enemies, etc.)
-    this.scene.children.list.forEach((child) => {
-      if (child.setVisible) child.setVisible(false); // Hide objects
-      if (child.body) child.body.enable = false;     // Disable physics bodies
-    });
-
-    // Create blur screen only once
-    if (!this.blurScreen) {
-      this.blurScreen = this.scene.add.graphics();
-      this.blurScreen.fillStyle(0x000000, 0.8);  // Dark semi-transparent background
-      this.blurScreen.fillRect(0, 0, this.scene.sys.game.config.width, this.scene.sys.game.config.height);  // Fill screen
-    }
-
-    // Create the Game Over message using HTML
-    if (!this.gameOverText) {
-      this.gameOverText = document.createElement('div');
-      this.gameOverText.innerHTML = 'WIN';
-      this.gameOverText.style.position = 'absolute';
-      this.gameOverText.style.top = '40%';  // Vertical centering
-      this.gameOverText.style.left = '50%'; // Horizontal centering
-      this.gameOverText.style.transform = 'translate(-50%, -50%)'; // Adjust position for exact centering
-      this.gameOverText.style.fontSize = '48px';
-      this.gameOverText.style.color = 'green';
-      this.gameOverText.style.fontFamily = 'Arial';
-      this.gameOverText.style.zIndex = '1000'; // Make sure it's above the game canvas
-      document.body.appendChild(this.gameOverText);  // Add it to the document body
-    }
-
-    // Create the Main Menu button using HTML
-    if (!this.mainMenuButton) {
-      this.mainMenuButton = document.createElement('button');
-      this.mainMenuButton.innerHTML = 'Main Menu';
-      this.mainMenuButton.style.position = 'absolute';
-      this.mainMenuButton.style.top = 'calc(40% + 50px)';  // Below the 'Game Over' text
-      this.mainMenuButton.style.left = '50%';  // Horizontal centering
-      this.mainMenuButton.style.transform = 'translateX(-50%)'; // Center horizontally
-      this.mainMenuButton.style.fontSize = '32px';
-      this.mainMenuButton.style.color = '#00ff00';
-      this.mainMenuButton.style.backgroundColor = 'transparent';
-      this.mainMenuButton.style.border = '2px solid #00ff00';
-      this.mainMenuButton.style.padding = '10px 20px';
-      this.mainMenuButton.style.zIndex = '1000';  // Make sure it's above the game canvas
-
-      // Button click action to restart or navigate to the Main Menu
-      this.mainMenuButton.addEventListener('click', () => {
-        this.scene.scene.start('MainMenu');  // Restart or navigate to Main Menu
-      });
-
-      document.body.appendChild(this.mainMenuButton);  // Add it to the document body
-    }
-  }
-
-  // Emit event to delete the room
-  this.socket.emit("deleteRoom", { roomCode: this.roomCode });
-}
-
-
-
 
 }

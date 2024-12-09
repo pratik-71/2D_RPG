@@ -89,7 +89,7 @@ export default class Castle {
       if (this.health <= 0) {
         this.health = 0;
         this.castle.destroy();  // Destroy the castle when health reaches 0
-        this.stopGame();  // Stop the game activities
+        this.stopGame({text:"Game Over",color:"#ff0000'"});  // Stop the game activities
         console.log("Castle destroyed!");
       }
       this.updateHealthBar();  // Update the health bar when damage is taken
@@ -101,7 +101,7 @@ export default class Castle {
     }
   }
 
-  stopGame() {
+  stopGame({text,color}) {
     if (this.scene) {
       // Pause the physics world
       this.scene.physics.world.pause();
@@ -122,13 +122,13 @@ export default class Castle {
       // Create the Game Over message using HTML
       if (!this.gameOverText) {
         this.gameOverText = document.createElement('div');
-        this.gameOverText.innerHTML = 'Game Over';
+        this.gameOverText.innerHTML = text;
         this.gameOverText.style.position = 'absolute';
         this.gameOverText.style.top = '40%';  // Vertical centering
         this.gameOverText.style.left = '50%'; // Horizontal centering
         this.gameOverText.style.transform = 'translate(-50%, -50%)'; // Adjust position for exact centering
         this.gameOverText.style.fontSize = '48px';
-        this.gameOverText.style.color = '#ff0000';
+        this.gameOverText.style.color = color;
         this.gameOverText.style.fontFamily = 'Arial';
         this.gameOverText.style.zIndex = '1000'; // Make sure it's above the game canvas
         document.body.appendChild(this.gameOverText);  // Add it to the document body
@@ -151,7 +151,7 @@ export default class Castle {
   
         // Button click action to restart or navigate to the Main Menu
         this.mainMenuButton.addEventListener('click', () => {
-          this.scene.scene.start('MainMenu');  // Restart or navigate to Main Menu
+          window.location.reload();  // Restart or navigate to Main Menu
         });
   
         document.body.appendChild(this.mainMenuButton);  // Add it to the document body

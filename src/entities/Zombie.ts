@@ -16,6 +16,9 @@ export default class Zombie {
   lastAttackTime: number;
   socketId: string;
   zombieData: any;
+  static killcount = 0; 
+ 
+ 
 
   constructor(scene: Phaser.Scene, x: number, y: number, castle: Castle, socketId: string, zombieData: any) {
     this.scene = scene;
@@ -65,16 +68,17 @@ export default class Zombie {
 
   createAnimations() {
     const directions = ["up", "down", "left", "right"];
+    const frameStarts = [0, 8, 16, 24];
 
-    directions.forEach((direction) => {
+    directions.forEach((direction,index) => {
       const walkKey = `zombie_walk-${direction}`;
       const attackKey = `zombie_attack-${direction}`;
 
       this.scene.anims.create({
         key: walkKey,
         frames: this.scene.anims.generateFrameNumbers("zombie_run", {
-          start: 0,
-          end: 3,
+          start: frameStarts[index],
+          end: frameStarts[index] + 7,
         }),
         frameRate: 10,
         repeat: -1,
@@ -83,8 +87,8 @@ export default class Zombie {
       this.scene.anims.create({
         key: attackKey,
         frames: this.scene.anims.generateFrameNumbers("zombie_attack", {
-          start: 0,
-          end: 3,
+          start: frameStarts[index],
+          end: frameStarts[index] + 7,
         }),
         frameRate: 10,
         repeat: 0,
@@ -111,12 +115,13 @@ export default class Zombie {
     this.currentDirection = isHorizontal
         ? (deltaX > 0 ? "right" : "left")
         : (deltaY > 0 ? "down" : "up");
+       
 
     if (!this.isAttacking) {
         this.scene.physics.moveToObject(this.sprite, this.target, this.speed);
-        this.sprite.anims.play(`zombie_walk-${this.currentDirection}`, true);
+        this.sprite.anims.play(`zombie_walk-${this.currentDirection}`, true);   
     }
-
+    
     // Check for overlaps with heroes
     this.checkHeroAttack();
 
@@ -153,9 +158,13 @@ export default class Zombie {
 
   takeDamage(amount: number) {
     this.zombieData.health -= amount;
-    console.log(`Zombie ${this.zombieData.id} took ${amount} damage. Remaining health: ${this.zombieData.health}`);
 
     if (this.zombieData.health <= 0) {
+      Zombie.killcount++;
+    console.log(Zombie.killcount)
+    if(Zombie.killcount>=5){
+      this.castle.stopGame({text:"YOU WIN",color:"#00ff00"})
+    }
       this.destroyZombie();
     }
   }
@@ -199,9 +208,9 @@ export default class Zombie {
       const localPlayer = this.scene.heroesById[this.socketId];
       const hero = this.scene.heroesById[this.target.id];
       if (this.target.id === localPlayer.hero.socketId) {
-        EventBus.emit("zombieAttack", this.target, 0.5);
+        EventBus.emit("zombieAttack", this.target, 1);
       } else if (hero) {
-        hero.hero.takeDamage(0.5, this.target.id, hero.sprite);
+        hero.hero.takeDamage(1, this.target.id, hero.sprite);
       }
 
       this.sprite.once("animationcomplete", () => {
@@ -214,9 +223,13 @@ export default class Zombie {
     if (this.isAttacking) return;
     this.isAttacking = true;
     this.sprite.anims.play(`zombie_attack-${this.currentDirection}`);
-    this.castle.takeDamage(0.5); // Ensure castle has a takeDamage method
+    this.castle.takeDamage(1); // Ensure castle has a takeDamage method
     this.sprite.once("animationcomplete", () => {
       this.isAttacking = false;
     });
   }
+
+
+  
+  
 }
