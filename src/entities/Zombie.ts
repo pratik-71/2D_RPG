@@ -67,7 +67,7 @@ export default class Zombie {
   }
 
   createAnimations() {
-    const directions = ["up", "down", "left", "right"];
+    const directions = ["down", "up", "left", "right"];
     const frameStarts = [0, 8, 16, 24];
 
     directions.forEach((direction,index) => {
