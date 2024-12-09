@@ -13,7 +13,7 @@ export default class Castle {
   healthBar: Phaser.GameObjects.Graphics | null;  // Health bar graphic
   gameOverText: Phaser.GameObjects.Text | null;  // Game Over text
   mainMenuButton: Phaser.GameObjects.Text | null;  // Main Menu button
-
+  
   constructor(scene, map, socket, roomCode) {
     this.socket = socket;
     this.roomCode = roomCode;

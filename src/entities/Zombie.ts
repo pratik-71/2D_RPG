@@ -107,18 +107,14 @@ export default class Zombie {
     const deltaY = targetY - this.sprite.y;
 
     // Determine movement direction
-    this.currentDirection =
-      Math.abs(deltaX) > Math.abs(deltaY)
-        ? deltaX > 0
-          ? "right"
-          : "left"
-        : deltaY > 0
-        ? "down"
-        : "up";
+    const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
+    this.currentDirection = isHorizontal
+        ? (deltaX > 0 ? "right" : "left")
+        : (deltaY > 0 ? "down" : "up");
 
     if (!this.isAttacking) {
-      this.scene.physics.moveToObject(this.sprite, this.target, this.speed);
-      this.sprite.anims.play(`zombie_walk-${this.currentDirection}`, true);
+        this.scene.physics.moveToObject(this.sprite, this.target, this.speed);
+        this.sprite.anims.play(`zombie_walk-${this.currentDirection}`, true);
     }
 
     // Check for overlaps with heroes
