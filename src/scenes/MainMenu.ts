@@ -6,6 +6,7 @@ import '../App.css'
 export default class MainMenu extends Phaser.Scene {
   private socket: any;
   private playerName: string = 'Noobie'; // Default player name
+  private RoomCode : number = 0;
   private playerNameText: Phaser.GameObjects.Text;
   private nameInputBox: Phaser.GameObjects.DOMElement | null = null;
   private overlay: Phaser.GameObjects.Rectangle | null = null;
@@ -51,7 +52,7 @@ export default class MainMenu extends Phaser.Scene {
     menuContainer.add(titleText);
 
     menuContainer.add(this.createButton('Start Game', 0, () => this.createRoom()));
-    menuContainer.add(this.createButton('Join Game', 60, () => this.joinRoom()));
+    menuContainer.add(this.createButton('Join Game', 60, () => this.openRoomCodeJoinWindow()));
 
     // Listen for room state updates
     this.socket.on('updateRoomState', (roomCode: string, playerCount: number, playerNames: string[], hostId: string) => {
@@ -73,6 +74,20 @@ export default class MainMenu extends Phaser.Scene {
     this.socket.on('closeMultiplayerWindow',()=>{
       this.showHostLeaveToast()
       this.closeMultiplayerWindow()
+    })
+
+    this.socket.on('roomFound',()=>{
+      toast.success('You Joined Room!', {
+        position: 'top-center',
+        autoClose: 1000,
+      });
+    })
+
+    this.socket.on('roomNotFound',()=>{
+      toast.warning('Room Not Found!', {
+        position: 'top-center',
+        autoClose: 1000,
+      });
     })
 
   }
@@ -128,6 +143,64 @@ export default class MainMenu extends Phaser.Scene {
     });
   }
 
+
+  openRoomCodeJoinWindow() {
+    if (this.nameInputBox) return; // Prevent multiple windows
+
+    // Create a transparent overlay
+    this.overlay = this.add.rectangle(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      this.cameras.main.width,
+      this.cameras.main.height,
+      0x000000,
+      0.5 // Semi-transparent black background
+    ).setInteractive(); // Catch all clicks
+
+    // Create HTML for the input box window with enhanced styling
+    const inputHTML = `
+      <div style="background-color: rgba(0, 0, 0, 0.8); padding: 30px; border-radius: 15px; text-align: center; width: 320px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);">
+        <h2 style="color: white; margin-bottom: 20px;">Join Room</h2>
+        <input type="text" placeholder="Enter Room Code" id="nameInput" style="width: 80%; padding: 10px; font-size: 18px; margin-bottom: 20px; border: 2px solid #fff; border-radius: 8px; background-color: #333; color: white;">
+        <button id="confirmButton" style="width: 100px; padding: 12px; font-size: 18px; color: white; background-color: #4CAF50; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
+          Join
+        </button>
+        <button id="cancelButton" style="width: 100px; padding: 12px; font-size: 18px; color: white; background-color: #f44336; border: none; border-radius: 8px; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
+          Cancel
+        </button>
+      </div>
+    `;
+
+    // Create a DOM element for the input box and add it to the scene
+    this.nameInputBox = this.add.dom(this.cameras.main.centerX, this.cameras.main.centerY).createFromHTML(inputHTML);
+
+    // Listen for button clicks inside the DOM element
+    this.nameInputBox.addListener('click');
+    this.nameInputBox.on('click', (event: any) => {
+      if (event.target.id === 'confirmButton') {
+        const inputElement = this.nameInputBox.getChildByID('nameInput') as HTMLInputElement;
+        const roomCode = inputElement.value.trim();
+
+        if (roomCode) {
+          // Emit joinRoom event with the room code and player name
+          this.socket.emit('joinRoom', { roomCode: roomCode, name: this.playerName });
+
+          // Close the window after emitting
+          this.closeNameChangeWindow();
+        } else {
+          toast.warning("Please enter a valid room code", {
+            position: 'top-center',
+            autoClose: 1000,
+          });
+        }
+      } else if (event.target.id === 'cancelButton') {
+        // Close the window if the cancel button is clicked
+        this.closeNameChangeWindow();
+      }
+    });
+  }
+
+
   closeNameChangeWindow() {
     if (this.nameInputBox) {
       this.nameInputBox.destroy(); // Remove the input box
@@ -143,16 +216,6 @@ export default class MainMenu extends Phaser.Scene {
     this.socket.emit('createRoom', { name: this.playerName });  // Send player name to backend
   }
 
-  joinRoom() {
-    const roomCode = prompt('Enter room code:');
-    if (roomCode) {
-      this.socket.emit('joinRoom', { roomCode, name: this.playerName }); // Send player name to backend
-      toast.success('You Joined Room!', {
-        position: 'top-center',
-        autoClose: 1000,
-      });
-    }
-  }
 
   showMultiplayerWindow(roomCode: string, playerNames: string[], isHost: boolean) {
     if (!this.multiplayerWindow) {
