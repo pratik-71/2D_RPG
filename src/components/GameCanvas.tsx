@@ -15,6 +15,7 @@ const GameCanvas: React.FC = () => {
   const [heroHealth, setHeroHealth] = useState(100);
   const [castleHealth, setCastleHealth] = useState(MAX_CASTLE_HEALTH);
   const [showChat, setShowChat] = useState(false);
+  const [showTaskbar,setshowTaskbar] = useState(true)
   const chatTimeout = useRef(null);
 
   // State for messages
@@ -83,6 +84,10 @@ const GameCanvas: React.FC = () => {
     }, 5000);
   };
 
+  const showtaskbar=()=>{
+      setshowTaskbar(true)  
+  }
+
   useEffect(() => {
     if (!phaserGame.current) {
       phaserGame.current = new Phaser.Game({
@@ -107,20 +112,22 @@ const GameCanvas: React.FC = () => {
     }
     EventBus.on("updateHeroHealth", updateHeroHealth);
     EventBus.on("ShowMessages", handleShowMessages);
-    EventBus.on("updateCastleHealth",updateCastleHealth)
-
+    EventBus.on("updateCastleHealth",updateCastleHealth)  
+    EventBus.on("showTaskBar",showtaskbar)
     return () => {
       EventBus.off("updateHeroHealth", updateHeroHealth);
       EventBus.off("ShowMessages", handleShowMessages);
       EventBus.off("updateCastleHealth",updateCastleHealth)
-
       phaserGame.current?.destroy(true);
       phaserGame.current = null;
     };
   }, []);
 
   return (
-    <div className="game-container">
+    <>
+    {
+      showTaskbar && (
+        <div className="game-container">
       <div id="phaser-container" className="phaser-container"></div>
 
       {/* Data Panel */}
@@ -188,6 +195,10 @@ const GameCanvas: React.FC = () => {
       {/* ToastContainer for showing notifications */}
       <ToastContainer limit={3} />
     </div>
+      )
+    }
+    </>
+    
   );
 };
 

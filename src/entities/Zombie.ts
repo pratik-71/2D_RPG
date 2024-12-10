@@ -162,7 +162,7 @@ export default class Zombie {
     if (this.zombieData.health <= 0) {
       Zombie.killcount++;
     console.log(Zombie.killcount)
-    if(Zombie.killcount>=5){
+    if(Zombie.killcount>=10){
       this.castle.stopGame({text:"YOU WIN",color:"#00ff00"})
     }
       this.destroyZombie();

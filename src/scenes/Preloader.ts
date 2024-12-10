@@ -20,6 +20,9 @@ export default class Preloader extends Phaser.Scene {
     this.load.image('castle_tiles','tiles/castle_tiles.png');
     this.load.image('ground_up_tiles','tiles/ground_up_tiles.png');
     this.load.image('tree_tiles', 'tiles/tree_tiles.png');
+    this.load.image('graphics_tiles','tiles/graphics_tiles.png')
+    this.load.image('stone_tiles','tiles/stone_tiles.png')
+    this.load.image('fence_tiles','tiles/fence_tiles.png')
     this.load.tilemapTiledJSON('game_environment', 'layers/game_environment.tmj');
   }
 

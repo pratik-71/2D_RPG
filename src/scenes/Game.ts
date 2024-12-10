@@ -8,6 +8,7 @@ import Zombie from "../entities/Zombie";
 
 export default class Game extends Phaser.Scene {
   socket: any;
+  
 
   constructor() {
     super("Game");
@@ -59,6 +60,7 @@ export default class Game extends Phaser.Scene {
   }
 
   async create() {
+    
     const map = this.make.tilemap({ key: "game_environment" });
 
     const dungeon_tileset = map.addTilesetImage("duneon", "dungeon_tiles");
@@ -78,12 +80,27 @@ export default class Game extends Phaser.Scene {
       "ground_up_tiles",
       "ground_up_tiles"
     );
+    const graphics_tiles = map.addTilesetImage(
+      'graphics_tiles',
+      'graphics_tiles'
+    )
+    const stone_tiles = map.addTilesetImage(
+      'stone_tiles',
+      'stone_tiles'
+    )
+    const fence_tiles = map.addTilesetImage(
+      'fence_tiles','fence_tiles'
+    )
     const road_tiles = map.addTilesetImage("enemy_spawn_tiles", "road_tiles");
 
     // Create layers
     map.createLayer("grass_tiles", grass_tiles_tileset, 0, 0);
-    map.createLayer("enemy_spawn_tiles", enemy_spawn_tiles_tileset, 0, 0);
     map.createLayer("road_tiles", road_tiles, 0, 0);
+  
+    map.createLayer("enemy_spawn_tiles", enemy_spawn_tiles_tileset, 0, 0);
+    map.createLayer('graphics_tiles',graphics_tiles,0,0)
+    map.createLayer('stone_tiles',stone_tiles,0,0)
+    map.createLayer('fence_tiles',fence_tiles,0,0)
     map.createLayer("ground_up_tiles", ground_up_tiles, 0, 0);
     map.createLayer("boundry_water_tiles", boundry_water_tiles, 0, 0);
     const boundaryLayer = map.createLayer("boundry", dungeon_tileset, 0, 0);
@@ -252,6 +269,8 @@ this.heroesById[player.id].sprite.health = player.health || 100; // Default heal
         zombie.sprite.setData("instance", zombie);
       }
     });
+
+    
   }
 
   handleSendMessage(message) {

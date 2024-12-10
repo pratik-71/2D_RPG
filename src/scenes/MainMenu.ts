@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { toast } from 'react-toastify';
 import io from 'socket.io-client';
 import '../App.css'
+import EventBus from '../EventBus';
 
 export default class MainMenu extends Phaser.Scene {
   private socket: any;
