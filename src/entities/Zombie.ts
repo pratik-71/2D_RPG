@@ -23,7 +23,7 @@ export default class Zombie {
   constructor(scene: Phaser.Scene, x: number, y: number, castle: Castle, socketId: string, zombieData: any) {
     this.scene = scene;
     this.castle = castle;
-    this.speed = 30;
+    this.speed = 40;
     this.health = 100;
     this.isAttacking = false;
     this.currentDirection = "down";
@@ -142,9 +142,10 @@ export default class Zombie {
       if (this.scene.physics.overlap(heroObj.sprite, this.sprite)) {
         const currentAnim = heroObj.sprite.anims.currentAnim;
         
-        if(!currentAnim.key.includes("attack") ){
+        if (currentAnim && currentAnim.key && !currentAnim.key.includes("attack")) {
           this.flag = true;
-        } 
+        }
+        
         if (currentAnim && currentAnim.key.includes("attack") && this.flag) {
           console.log(`Zombie ${this.id} hit by Hero ${heroObj.id}`);
           this.flag = false;
@@ -162,7 +163,7 @@ export default class Zombie {
     if (this.zombieData.health <= 0) {
       Zombie.killcount++;
     console.log(Zombie.killcount)
-    if(Zombie.killcount>=10){
+    if(Zombie.killcount>=40){
       this.castle.stopGame({text:"YOU WIN",color:"#00ff00"})
     }
       this.destroyZombie();
@@ -200,30 +201,41 @@ export default class Zombie {
 
   attackHero() {
     if (this.isAttacking || !(this.target instanceof Phaser.Physics.Arcade.Sprite)) return;
+    if (this.currentDirection==null) {
+      this.currentDirection = "down"; // Fallback to a default direction
+    }
+    const attackAnimationKey = `zombie_attack-${this.currentDirection}`;
 
-    this.isAttacking = true;
-    this.sprite.anims.play(`zombie_attack-${this.currentDirection}`, true);
-
-    this.scene.time.delayedCall(300, () => {
-      const localPlayer = this.scene.heroesById[this.socketId];
-      const hero = this.scene.heroesById[this.target.id];
-      if (this.target.id === localPlayer.hero.socketId) {
-        EventBus.emit("zombieAttack", this.target, 1);
-      } else if (hero) {
-        hero.hero.takeDamage(1, this.target.id, hero.sprite);
-      }
-
-      this.sprite.once("animationcomplete", () => {
-        this.isAttacking = false; // Allow new attacks
+    // Check if the animation key exists before attempting to play it
+    if (this.scene.anims.exists(attackAnimationKey)) {
+      this.isAttacking = true;
+      this.sprite.anims.play(attackAnimationKey, true);
+    
+      this.scene.time.delayedCall(300, () => {
+        const localPlayer = this.scene.heroesById[this.socketId];
+        const hero = this.scene.heroesById[this.target.id];
+    
+        if (this.target.id === localPlayer?.hero?.socketId) {
+          EventBus.emit("zombieAttack", this.target, 1);
+        } else if (hero) {
+          hero.hero.takeDamage(2, this.target.id, hero.sprite);
+        }
+    
+        this.sprite.once("animationcomplete", () => {
+          this.isAttacking = false; // Allow new attacks
+        });
       });
-    });
+    } else {
+      console.warn(`Animation "${attackAnimationKey}" does not exist.`);
+    }
+    
   }
 
   attackCastle() {
     if (this.isAttacking) return;
     this.isAttacking = true;
     this.sprite.anims.play(`zombie_attack-${this.currentDirection}`);
-    this.castle.takeDamage(1); // Ensure castle has a takeDamage method
+    this.castle.takeDamage(2); // Ensure castle has a takeDamage method
     this.sprite.once("animationcomplete", () => {
       this.isAttacking = false;
     });

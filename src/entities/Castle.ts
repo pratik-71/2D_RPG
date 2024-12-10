@@ -89,7 +89,7 @@ export default class Castle {
       if (this.health <= 0) {
         this.health = 0;
         this.castle.destroy();  // Destroy the castle when health reaches 0
-        this.stopGame({text:"Game Over",color:"#ff0000'"});  // Stop the game activities
+        this.stopGame({text:"Game Over",color:"#FF0000"});  // Stop the game activities
         console.log("Castle destroyed!");
       }
       this.updateHealthBar();  // Update the health bar when damage is taken
