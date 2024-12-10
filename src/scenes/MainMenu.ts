@@ -26,7 +26,7 @@ export default class MainMenu extends Phaser.Scene {
   }
 
   create() {
-    this.socket = io('http://localhost:3000');
+    this.socket = io('https://2d-rpg-sever.vercel.app/');
 
     // Background setup
     const background = this.add.image(0, 0, 'background').setOrigin(0, 0);
